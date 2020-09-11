@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"time"
 )
 
 const (
@@ -19,6 +20,7 @@ type Config struct {
 	ListenAddress           string
 	WalletAPIAddress        string
 	DatabasePath            string
+	EnvelopeDuration        time.Duration
 }
 
 var config = Config {
@@ -27,6 +29,7 @@ var config = Config {
 	WalletAPIAddress:  "http://127.0.0.1:14666/api/wallet",
 	LogName:           "BEAM Red Envelope",
 	DatabasePath:      "./database",
+	EnvelopeDuration:  time.Second * 10,
 }
 
 func loadConfig (m *melody.Melody) {

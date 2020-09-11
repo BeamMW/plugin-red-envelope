@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	badger "github.com/dgraph-io/badger/v2"
+	"log"
 	"time"
 )
 
@@ -54,6 +55,7 @@ func DBStore(key string, value interface{}) (err error) {
 		return err
 	}
 
+	log.Printf("Storing\n\tkey:%v\n\tjson:%v", key, string(raw))
 	return Database.Update(func(tx *badger.Txn) error {
 		key     := []byte(key)
 		entry   := badger.NewEntry(key, raw)

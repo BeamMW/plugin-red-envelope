@@ -2,9 +2,7 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/olahol/melody"
-	"log"
 )
 
 type statusParams struct {
@@ -12,11 +10,17 @@ type statusParams struct {
 }
 
 type statusResult struct {
-	Total        uint64 `json:"total"`
-	Receiving    uint64 `json:"receiving"`
-	Participants uint32 `json:"participants"`
-	OpenTime     uint32 `json:"open_time"`
-	Stake        uint64 `json:"stake"`
+	TotalInEnvelope   uint64 `json:"total_in_envelope"`
+	ReceivedFromUser  uint64 `json:"received_from_user"`
+	ReceivingFromAll  uint64 `json:"receiving_from_all"`
+	ReceivingFromUser uint64 `json:"receiving_from_user"`
+	Participants      uint32 `json:"participants"`
+	OutgoingReward    uint64 `json:"outgoing_reward"`
+	PaidReward        uint64 `json:"paid_reward"`
+	AvailableReward   uint64 `json:"available_reward"`
+	LastWinTime       int64  `json:"last_win_time"`
+	OpenTime          int64  `json:"envelope_open_time"`
+	CanWithdraw       bool   `json:"can_withdraw"` // TODO:refactor send automatic status updates from server and this can be removed
 }
 
 func onGetStatus(session* melody.Session, params *json.RawMessage) (res statusResult, err error) {
@@ -25,42 +29,27 @@ func onGetStatus(session* melody.Session, params *json.RawMessage) (res statusRe
 		return
 	}
 
-	if config.Debug {
-		log.Printf("status request for id: %v", par.UserAddress)
-	}
-
-	user, ok := users.GetStrict(par.UserAddress)
-	if !ok {
-		err = fmt.Errorf("user not found, try to login first")
+	var user *User
+	if user, err = users.Get(par.UserAddress); err != nil {
 		return
 	}
 
-	var status WalletStatus
-	if status, err = wallet.GetStatus(); err != nil {
+	var stats EnvelopeUserStats
+	if stats, err = envelope.getUserStats(user); err != nil {
 		return
 	}
 
-	res.Total     = status.Available
-	res.Receiving = status.Receiving
-
-	var txs []Transaction
-	if txs, err = wallet.GetTransactions(); err != nil {
-		return
-	}
-
-	// TODO: optimize
-	var participants = make(map[string]bool)
-	for _, tx := range txs {
-		if tx.Status == Completed {
-			participants[tx.Receiver] = true
-			if tx.Receiver == user.DepositAddress {
-				res.Stake += tx.Value
-			}
-		}
-	}
-
-	res.Participants = uint32(len(participants))
-	res.OpenTime     = 0
+	res.TotalInEnvelope   = stats.TotalInEnvelope
+	res.ReceivedFromUser  = stats.ReceivedFromUser
+	res.ReceivingFromAll  = stats.ReceivingFromAll
+	res.ReceivingFromUser = stats.ReceivingFromUser
+	res.Participants      = stats.Participants
+	res.OutgoingReward    = stats.OutgoingReward
+	res.PaidReward        = stats.PaidReward
+	res.AvailableReward   = stats.AvailableReward
+	res.LastWinTime       = stats.LastWinTime
+	res.OpenTime          = stats.OpenTime
+	res.CanWithdraw       = user.CanWithdraw() && stats.AvailableReward > 0
 
 	return
 }

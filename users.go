@@ -2,13 +2,16 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"sync"
+	"sync/atomic"
 )
 
 type User struct {
-	UserAddress    string
-	DepositAddress string
+	UserAddress         string
+	DepositAddress      string
+	ProcessingWidthdraw int32  `json:"-"`
 }
 
 const (
@@ -22,22 +25,57 @@ func (user *User) StoreChanges () {
 	}
 }
 
+func (user* User) StartWithdraw () error {
+	var processing = atomic.LoadInt32(&user.ProcessingWidthdraw)
+	if processing != 0 {
+		return fmt.Errorf("already withdrawing")
+	}
+
+	atomic.StoreInt32(&user.ProcessingWidthdraw, 1)
+	envelope.Withdraw(user)
+
+	return nil
+}
+
+func (user* User) CanWithdraw () bool {
+	return atomic.LoadInt32(&user.ProcessingWidthdraw) == 0
+}
+
+func (user* User) FinishWithdraw() {
+	atomic.StoreInt32(&user.ProcessingWidthdraw, 0)
+}
+
 type Users struct {
 	all   map[string] *User
 	mutex sync.Mutex
 }
 
-func (users *Users) GetStrict(address string) (*User, bool){
+func (users *Users) Get(address string) (*User, error) {
 	users.mutex.Lock()
 	defer users.mutex.Unlock()
 
-	user, ok := users.all[address]
-	return user, ok
+	if user, ok := users.all[address]; ok {
+		return user, nil
+	}
+
+	return nil, fmt.Errorf("user %s not found", address)
+}
+
+func (users *Users) GetByDepoAddr(depoaddr string) (*User, bool) {
+	users.mutex.Lock()
+	defer users.mutex.Unlock()
+
+	for _, user := range users.all {
+		if user.DepositAddress == depoaddr {
+			return user, true
+		}
+	}
+
+	return nil, false
 }
 
 func (users *Users) GetOrAdd(address string) (user *User, err error) {
-	var ok bool
-	if user, ok = users.GetStrict(address); ok {
+	if user, err = users.Get(address); err == nil {
 		return
 	}
 
@@ -85,7 +123,6 @@ func (users *Users) Load() {
 	if err != nil {
 		panic(err)
 	}
-
 	log.Printf("Users loaded: %v", counter)
 }
 

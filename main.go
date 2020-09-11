@@ -38,7 +38,7 @@ func main () {
 	//
 	initDatabase()
 	users.Load()
-	initEnvelope()
+	envelope.initEnvelope()
 
 	//
 	// HTTP API

@@ -12,11 +12,15 @@ func onClientMessage (session *melody.Session, msg []byte) (response []byte) {
 
 			switch method {
 			case "login":
+				// TODO: remove user_address from all request except first, it is stored on session
+				// TODO: may be refactor via func ptrs
 				result, err = onClientLogin(session, params)
 			case "logout":
 				result, err = onClientLogout(session, params)
 			case "get-status":
 				result, err = onGetStatus(session, params)
+			case "withdraw":
+				result, err = onClientWithdraw(session, params)
 			default:
 				err = fmt.Errorf("method '%v' not found", method)
 				errCode = NoMethod

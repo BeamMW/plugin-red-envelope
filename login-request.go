@@ -35,6 +35,8 @@ func onClientLogin(session* melody.Session, params *json.RawMessage) (res loginR
 		return
 	}
 
+	setUserID(session, user.UserAddress)
 	res.DepositAddress = user.DepositAddress
+
 	return
 }

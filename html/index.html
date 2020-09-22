@@ -45,9 +45,9 @@
             Utils.onLoad(async (beamAPI) => {
                 BEAM = beamAPI
     
-                // Just to be sure that everything is loaded
-                let res = await BEAM.test()
-                Utils.byId('title').innerText += ' ' + res;
+                // Just to be sure that everything is loaded, should return an ultimate answer
+                // let res = await BEAM.test()
+                // Utils.byId('title').innerText += ' ' + res;
 
                 //
                 // Make everything beautiful
@@ -86,7 +86,6 @@
 
                     hide('game')
                     setStatus('Reconnecting...')
-                    
 
                     socket = null
                     connTimeout = setTimeout (connect, now ? 0 : 3000)
@@ -144,12 +143,43 @@
 
                         if (msg.id == 'get-status') {
                             let info = msg.result
-                            setText('total', info.total / 100000000)
-                            setText('incoming', info.receiving / 100000000)
-                            setText('stake', info.stake / 100000000)
+                            
+                            setText('total',        info.total_in_envelope   / 100000000)
+                            setText('incoming-all', info.receiving_from_all  / 100000000)
+                            setText('incoming',     info.receiving_from_user / 100000000)
+                            setText('stake',        info.received_from_user  / 100000000)
                             setText('participants', info.participants)
-                            setText('refat', ["Refreshed at: ", (new Date).toLocaleTimeString()].join(''))
+
+                            setText('reward-paid',  info.paid_reward      / 100000000)
+                            setText('reward-out',   info.outgoing_reward  / 100000000)
+                            setText('reward-avail', info.available_reward / 100000000)
+                            
+                            if (info.can_withdraw) {
+                                show('withdraw')
+                            } else {
+                                hide('withdraw')
+                            }
+
+                            if (info.last_win_time) {
+                                show('congrats')
+                                setText('win-time', (new Date(info.last_win_time * 1000)).toLocaleTimeString())
+                            } 
+                            else {
+                               hide('congrats')
+                            }
+
+                            if (info.envelope_open_time) {
+                                hide('not-running')
+                                show('running')
+                                setText('open-time', (new Date(info.envelope_open_time * 1000)).toLocaleTimeString())
+                            } else {
+                                hide('running')
+                                show('not-running')
+                            }
+
+                            setText('refat', ["Refreshed at: ", (new Date()).toLocaleTimeString()].join(''))
                             show('game')
+                            
                             return
                         }
                     }
@@ -164,11 +194,23 @@
                         }
                     }
                 }
-
                 
                 Utils.byId('make-stake').addEventListener('click', (ev) => {
-                    BEAM.sendBEAM("BEAM Envelope", envelopeAddr, 100000000, 100)
                     ev.preventDefault()
+                    BEAM.sendBEAM("BEAM Envelope", envelopeAddr, 100000000, 100)
+                })
+
+                Utils.byId('withdraw').addEventListener('click', (ev) => {
+                    ev.preventDefault()
+                    hide('withdraw')
+                    socket.send(JSON.stringify({
+                        jsonrpc: "2.0",
+                        id:      "withdraw",
+                        method:  "withdraw",
+                        params: {
+                            user_addr: my_address
+                        }
+                    }))
                 })
 
                 BEAM.permanentAddressGenerated.connect((address) => {
@@ -187,19 +229,56 @@
     <body>
         <div class="center">
             <div id="title">BEAM Red Envelope</div><br>
-            <img src="icons/envelope.svg" width="80px"><br><br>
+            <img src="./icons/envelope.svg" width="80px"><br><br>
             <div id="status">Connecting...</div>
             <div id="error"></div>
         </div>
         <div class="center invisible" id="game">
-            <div>In Envelope:  <span id="total"></span> BEAM</div>
-            <div>Incoming:     <span id="incoming"></span> BEAM</div>
-            <div>Participants: <span id="participants"></span></div>
-            <div>Your stake:   <span id="stake"></span> BEAM</div><br>
-            <div id="eaddr"></div>
-            <div id="refat"></div>
+            <div class="gray">
+                Your envelope deposit address:
+                <div id="eaddr"></div>
+            </div>
+            <br>
+            <div>In Envelope:       <span id="total"></span> BEAM</div>
+            <div>Incoming:          <span id="incoming-all"></span> BEAM</div>
+            <div>Incoming from you: <span id="incoming"></span> BEAM</div>
+            <div>Participants:      <span id="participants"></span></div>
+            <div>Your stake:        <span id="stake"></span> BEAM</div>
+            
+            <div class="red invisible" id="not-running">
+                <br>
+                Envelope is not running NOW
+                <br>
+                Stake to launch!
+            </div>
+            <div class="red" id="running">
+                <br>
+                Envelope would be opened at <spand id="open-time"></span>
+            </div>
+
+            <div>
             <br>
             <a href='' id="make-stake">Stake 1 BEAM</a>
+            </div>
+
+            <div class="invisible" id="congrats">
+                <br>
+                Congratulations! You won an evelope at <span id="win-time"></span>
+            </div>
+
+            <div class="green">
+                <br>
+                <div>Your paid reward:  <span id="reward-paid"></span> BEAM</div>
+                <div>Your outgoing reward:  <span id="reward-out"></span> BEAM</div>
+                <div>Your available reward:  <span id="reward-avail"></span> BEAM</div>
+                <div id="withdraw" class="invisible">
+                    <br>
+                    <a href='' id="withdraw">Withdraw</a>
+                </div>
+            </div>
+            
+            <br>
+            <div class="gray" id="refat"></div>
         </div>
         <div class="center">
             <br>

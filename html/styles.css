@@ -25,6 +25,18 @@ body {
     display: none;
 }
 
+.green {
+    color: seagreen
+}
+
+.gray {
+    color: gray
+}
+
+.red {
+    color: lightcoral
+}
+
 #title {
     font-family: "Proxima Nova Thin";    
     font-size: 38px;
@@ -43,10 +55,14 @@ body {
     color: #00f6d2;
 }
 
-#eaddr {
-    color: gray
+#withdraw {
+    color: #00f6d2;
 }
 
-#refat {
-    color: gray
+#eaddr {
+    
+}
+
+#congrats {
+    color: greenyellow;
 }

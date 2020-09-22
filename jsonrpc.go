@@ -1,8 +1,7 @@
-package main
+package jsonrpc
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"log"
 )
@@ -29,19 +28,14 @@ type RPCResponse struct {
 	Result  *json.RawMessage `json:"result"`
 }
 
-/*type RPCError struct {
-	Code int `json:"code"`
-	Message string `json:"message"`
-}*/
-
 type RpcErrCode int
+
 const (
 	ParseError      RpcErrCode = -32700
 	InvalidRequest  RpcErrCode = -32600
 	NoMethod        RpcErrCode = -32601
 	BadMethodParams RpcErrCode = -32602
 	InternalError   RpcErrCode = -32603
-
 )
 
 func getIdStr(rawid *json.RawMessage) string {

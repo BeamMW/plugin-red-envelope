@@ -2,40 +2,9 @@ package jsonrpc
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
-)
-
-type RPCHeader struct {
-	Jsonrpc string           `json:"jsonrpc"`
-	Id      *json.RawMessage `json:"id"`
-	Result  *json.RawMessage `json:"result"`
-	Params  *json.RawMessage `json:"params"`
-	Error   *json.RawMessage `json:"error"`
-	Method  string           `json:"method"`
-}
-
-type RPCRequest struct {
-	Jsonrpc string           `json:"jsonrpc"`
-	Id      *json.RawMessage `json:"id"` // TODO: do we need pointer here?
-	Method  string           `json:"method"`
-	Params  *json.RawMessage `json:"params"`
-}
-
-type RPCResponse struct {
-	Jsonrpc string           `json:"jsonrpc"`
-	Id      *json.RawMessage `json:"id"`
-	Result  *json.RawMessage `json:"result"`
-}
-
-type RpcErrCode int
-
-const (
-	ParseError      RpcErrCode = -32700
-	InvalidRequest  RpcErrCode = -32600
-	NoMethod        RpcErrCode = -32601
-	BadMethodParams RpcErrCode = -32602
-	InternalError   RpcErrCode = -32603
 )
 
 func getIdStr(rawid *json.RawMessage) string {
@@ -45,10 +14,8 @@ func getIdStr(rawid *json.RawMessage) string {
 	return string(*rawid)
 }
 
-//  -> method name, json params -> error | rpc result
-type RpcHandler func(string, *json.RawMessage) (interface{}, RpcErrCode, error)
 
-func jsonRpcProcess(msg []byte, handler RpcHandler) (response []byte) {
+func ProcessMessage(msg []byte, debug bool, handler RpcHandler) (response []byte) {
 	var err error
 	var errCode RpcErrCode
 
@@ -83,7 +50,7 @@ func jsonRpcProcess(msg []byte, handler RpcHandler) (response []byte) {
 
 	var header = RPCHeader{}
 	if err := json.Unmarshal(msg, &header); err != nil {
-		errCode = ParseError
+		errCode = ErrParse
 		return
 	}
 
@@ -93,7 +60,7 @@ func jsonRpcProcess(msg []byte, handler RpcHandler) (response []byte) {
 	}
 
 	if header.Result != nil {
-		if config.Debug {
+		if debug {
 			log.Printf("jsonrpc, received response for id [%v], result %v", getIdStr(header.Id), string(*header.Result))
 		}
 		return
@@ -103,29 +70,59 @@ func jsonRpcProcess(msg []byte, handler RpcHandler) (response []byte) {
 	// Assume we're dealing with request (method call)
 	//
 	if requestId = header.Id; header.Id == nil {
-		errCode = InvalidRequest
+		errCode = ErrInvalidReq
 		err = fmt.Errorf("missing jsonrpc id")
 		return
 	}
 
 	if header.Jsonrpc != "2.0" {
-		errCode = InvalidRequest
+		errCode = ErrInvalidReq
 		err = fmt.Errorf("bad jsonrpc version %v", header.Jsonrpc)
 		return
 	}
 
 	if header.Params == nil {
 		err = errors.New("bad jsonrpc, params are nil")
-		errCode = InvalidRequest
+		errCode = ErrInvalidReq
 		return
 	}
 
 	if len(header.Method) == 0 {
 		err = errors.New("bad jsonrpc, empty method")
-		errCode = InvalidRequest
+		errCode = ErrInvalidReq
 		return
 	}
 
 	requestResult, errCode, err = handler(header.Method, header.Params)
 	return
+}
+
+func WrapMessage(id string, msg interface{}) ([]byte, error) {
+	var bytesid []byte
+	var err error
+
+	if bytesid, err = json.Marshal(id); err != nil {
+		return nil, err
+	}
+
+	var rawid = json.RawMessage(bytesid)
+	var resp = RPCResponse{
+		Jsonrpc: "2.0",
+		Id:      &rawid,
+	}
+
+	var bres []byte
+	if bres, err = json.Marshal(msg); err != nil {
+		return nil, err
+	}
+
+	rawmsg := json.RawMessage(bres)
+	resp.Result = &rawmsg
+
+	var response [] byte
+	if response, err = json.Marshal(resp); err != nil {
+		return nil, err
+	}
+
+	return response, nil
 }

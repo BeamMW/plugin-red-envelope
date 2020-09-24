@@ -3,16 +3,20 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/olahol/melody"
+	"github.com/chapati/melody"
 	"log"
 )
+
+func onClientConnect(session *melody.Session) error {
+	return nil
+}
+
 
 type loginParams struct {
 	UserAddress string  `json:"user_addr"`
 }
 
 type loginResult struct {
-	DepositAddress string `json:"envelope_addr"`
 }
 
 func onClientLogin(session* melody.Session, params *json.RawMessage) (res loginResult, err error) {
@@ -27,16 +31,15 @@ func onClientLogin(session* melody.Session, params *json.RawMessage) (res loginR
 	}
 
 	if config.Debug {
-		log.Println("Login request for", req.UserAddress)
+		log.Println("login request for", req.UserAddress)
 	}
 
-	var user *User
-	if user, err = users.GetOrAdd(req.UserAddress); err != nil {
-		return
-	}
-
-	setUserID(session, user.UserAddress)
-	res.DepositAddress = user.DepositAddress
+	setUserID(session, req.UserAddress)
+	go func(){
+		if err := sendStatus(session); err != nil {
+			log.Println(err)
+		}
+	}()
 
 	return
 }

@@ -2,15 +2,108 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
-	"log"
-	"math/rand"
-	"strconv"
+	"github.com/BeamMW/red-envelope/database"
+	"github.com/dgraph-io/badger/v2"
 	"sync"
-	"sync/atomic"
-	"time"
 )
 
+type Envelope struct {
+	Address   string `json:"address"`
+	Remaining uint64 `json:"remaining"`
+	db        *database.Database
+	mutex     *sync.RWMutex
+}
+
+const (
+	EnvelopeKey = "red-envelope"
+)
+
+func (env* Envelope) load () error {
+	// check if we have stored envelope
+	return env.db.Get(EnvelopeKey, func (raw []byte) error {
+		return json.Unmarshal(raw, &env)
+	})
+}
+
+func (env* Envelope) save () error {
+	return env.db.Set(EnvelopeKey, env)
+}
+
+func (env* Envelope) saveStrict () {
+	if err := env.save(); err != nil {
+		panic (err)
+	}
+}
+
+func LoadOrCreateEnvelope() (*Envelope, error) {
+	var env = &Envelope {
+		db: DB,
+		mutex: &sync.RWMutex{},
+	}
+
+	err := env.load()
+	if err == nil {
+		// everything is OK
+		return env, nil
+	}
+
+	if err != badger.ErrKeyNotFound {
+		// some unexpected error
+		return nil, err
+	}
+
+	//
+	// There is no stored envelope
+	// Must create a new one
+	//
+	addrs, err := wallet.OwnAddrList()
+	if err != nil {
+		return nil, err
+	}
+
+	for _, addr := range addrs {
+		if addr.Comment == EnvelopeKey {
+			env.Address = addr.Address
+		}
+	}
+
+	if len(env.Address) == 0 {
+		env.Address, err = wallet.CreateAddress(EnvelopeKey, ExpNever)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	err = env.save()
+	if err != nil {
+		return nil, err
+	}
+
+	return env, nil
+}
+
+type EnvelopeStatus struct {
+	Address    string
+	Remaining  uint64
+}
+
+func (env* Envelope) GetStatus () (*EnvelopeStatus, error) {
+	return &EnvelopeStatus{}, nil
+}
+
+
+var (
+	envelope *Envelope
+)
+
+func initEnvelope() {
+	var err error
+	if envelope, err = LoadOrCreateEnvelope(); err != nil {
+		panic(err)
+	}
+}
+
+/*
 type EnvelopeWin struct {
 	DepositAddress string
 	UserAddress    string
@@ -388,3 +481,4 @@ var (
 		withdraw: make(chan string),
 	}
 )
+*/

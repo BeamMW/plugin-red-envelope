@@ -2,9 +2,7 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
-	"github.com/olahol/melody"
-	"log"
+	"github.com/chapati/melody"
 )
 
 type widthdrawParams struct {
@@ -14,8 +12,8 @@ type widthdrawParams struct {
 type withdrawResult struct {
 }
 
-func onClientWithdraw(session* melody.Session, params *json.RawMessage) (res loginResult, err error) {
-	var req loginParams
+func onClientWithdraw(session* melody.Session, params *json.RawMessage) (res withdrawResult, err error) {
+	/*var req widthdrawParams
 	if err = json.Unmarshal(*params, &req); err != nil {
 		return
 	}
@@ -34,6 +32,6 @@ func onClientWithdraw(session* melody.Session, params *json.RawMessage) (res log
 		return
 	}
 
-	err = user.StartWithdraw()
+	err = user.StartWithdraw()*/
 	return
 }

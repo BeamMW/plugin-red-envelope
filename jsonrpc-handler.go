@@ -3,34 +3,31 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/olahol/melody"
+	"github.com/BeamMW/red-envelope/jsonrpc"
+	"github.com/chapati/melody"
 )
 
 func onClientMessage (session *melody.Session, msg []byte) (response []byte) {
-	return jsonRpcProcess(msg,
-		func(method string, params *json.RawMessage) (result interface{}, errCode RpcErrCode, err error) {
+	return jsonrpc.ProcessMessage(msg, config.Debug,
+		func(method string, params *json.RawMessage) (result interface{}, errCode jsonrpc.RpcErrCode, err error) {
 
 			switch method {
 			case "login":
-				// TODO: remove user_address from all request except first, it is stored on session
-				// TODO: may be refactor via func ptrs
 				result, err = onClientLogin(session, params)
-			case "logout":
-				result, err = onClientLogout(session, params)
-			case "get-status":
-				result, err = onGetStatus(session, params)
-			case "withdraw":
-				result, err = onClientWithdraw(session, params)
+
+			case "take":
+				result, err = onClientTake(session, params)
+
 			default:
 				err = fmt.Errorf("method '%v' not found", method)
-				errCode = NoMethod
+				errCode = jsonrpc.ErrNoMethod
 			}
 
 			if err != nil {
 				if _, ok := err.(*json.MarshalerError); ok {
-					errCode = ParseError
+					errCode = jsonrpc.ErrParse
 				} else {
-					errCode = InternalError
+					errCode = jsonrpc.ErrInternal
 				}
 			}
 			return

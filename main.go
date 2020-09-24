@@ -2,9 +2,16 @@ package main
 
 import (
 	"flag"
-	"github.com/olahol/melody"
+	"github.com/BeamMW/red-envelope/database"
+	"github.com/BeamMW/red-envelope/game"
+	"github.com/chapati/melody"
 	"log"
 	"net/http"
+)
+
+var (
+	DB* database.Database
+	Game* game.Game
 )
 
 func main () {
@@ -30,15 +37,26 @@ func main () {
 	log.Printf("starting %s, version %s", config.LogName, programVersion)
 	log.Printf("cwd is %s", getCWD())
 
+	//
+	// Init stuff
+	//
+	var err error
+
 	m := melody.New()
 	loadConfig(m)
 
-	//
-	// Functions below can panic
-	//
-	initDatabase()
-	users.Load()
-	envelope.initEnvelope()
+	DB, err = database.New(config.DatabasePath)
+	if err != nil {
+		panic (err)
+	}
+
+	Game, err = game.New(DB, config.WalletAPIAddress)
+	if err != nil {
+		panic (err)
+	}
+
+	// Automatically update status of all active users
+	go broadcastStatus(m)
 
 	//
 	// HTTP API
@@ -68,7 +86,10 @@ func main () {
 
 	m.HandleConnect(func(session *melody.Session) {
 		if config.Debug {
-			log.Printf("websocket server new session")
+			log.Printf("websocket server new session %v", session)
+		}
+		if err := onClientConnect(session); err != nil {
+			log.Printf("websocket onClientConnect error, %v", err)
 		}
 	})
 

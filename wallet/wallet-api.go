@@ -4,6 +4,10 @@ type API struct {
 	Address string
 }
 
+const  (
+	GrothInBEAM uint64 = 100000000
+)
+
 func New(address string) *API {
 	return &API{
 		Address: address,
@@ -11,5 +15,5 @@ func New(address string) *API {
 }
 
 func GROTH2Beam(groth uint64) float64 {
-	return float64(groth) / 100000000
+	return float64(groth) / float64(GrothInBEAM)
 }

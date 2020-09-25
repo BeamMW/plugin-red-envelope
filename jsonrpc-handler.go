@@ -7,7 +7,7 @@ import (
 	"github.com/chapati/melody"
 )
 
-func onClientMessage (session *melody.Session, msg []byte) (response []byte) {
+func onClientMessage(session *melody.Session, msg []byte) (response []byte) {
 	return jsonrpc.ProcessMessage(msg, config.Debug,
 		func(method string, params *json.RawMessage) (result interface{}, errCode jsonrpc.RpcErrCode, err error) {
 
@@ -17,6 +17,9 @@ func onClientMessage (session *melody.Session, msg []byte) (response []byte) {
 
 			case "take":
 				result, err = onClientTake(session, params)
+
+			case "withdraw":
+				result, err = onClientWithdraw(session, params)
 
 			default:
 				err = fmt.Errorf("method '%v' not found", method)

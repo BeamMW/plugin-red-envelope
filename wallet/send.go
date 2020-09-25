@@ -6,12 +6,12 @@ type sendResult struct {
 	TxID string `json:"txId"`
 }
 
-func (api* API) SendBEAM(to string, from string, amount uint64, fee uint64) (txid string, err error) {
+func (api *API) SendBEAM(to string, from string, amount uint64, fee uint64) (txid string, err error) {
 	var params = JsonParams{
-		"value": amount,
-		"fee": fee,
+		"value":   amount,
+		"fee":     fee,
 		"address": to,
-		"from": from,
+		"from":    from,
 		"comment": "user withdraw request",
 	}
 

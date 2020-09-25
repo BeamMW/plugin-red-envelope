@@ -3,7 +3,7 @@ package main
 import (
 	"encoding/json"
 	"errors"
-	"github.com/olahol/melody"
+	"github.com/chapati/melody"
 	"log"
 	"os"
 	"path/filepath"
@@ -15,28 +15,28 @@ const (
 )
 
 type Config struct {
-	LogName                 string
-	Debug				    bool
-	ListenAddress           string
-	WalletAPIAddress        string
-	DatabasePath            string
-	EnvelopeDuration        time.Duration
+	LogName          string
+	Debug            bool
+	ListenAddress    string
+	WalletAPIAddress string
+	DatabasePath     string
+	EnvelopeDuration time.Duration
 }
 
-var config = Config {
-	Debug:             true,
-	ListenAddress:     "127.0.0.1:13666",
-	WalletAPIAddress:  "http://127.0.0.1:14666/api/wallet",
-	LogName:           "BEAM Red Envelope",
-	DatabasePath:      "./database",
-	EnvelopeDuration:  time.Second * 10,
+var config = Config{
+	Debug:            true,
+	ListenAddress:    "127.0.0.1:13666",
+	WalletAPIAddress: "http://127.0.0.1:14666/api/wallet",
+	LogName:          "BEAM Red Envelope",
+	DatabasePath:     "./db-files",
+	EnvelopeDuration: time.Second * 10,
 }
 
-func loadConfig (m *melody.Melody) {
+func loadConfig(m *melody.Melody) {
 	config.Read(ConfigFile, m)
 }
 
-func (cfg* Config) Read(fname string, m *melody.Melody) {
+func (cfg *Config) Read(fname string, m *melody.Melody) {
 	// Set melody params
 	m.Config.MaxMessageSize = 1024
 

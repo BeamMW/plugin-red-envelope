@@ -4,6 +4,6 @@ import "fmt"
 
 var programVersion string
 
-func printVersion () {
+func printVersion() {
 	fmt.Println(config.LogName, programVersion)
 }

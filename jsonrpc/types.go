@@ -13,7 +13,7 @@ type RPCHeader struct {
 
 type RPCRequest struct {
 	Jsonrpc string           `json:"jsonrpc"`
-	Id      *json.RawMessage `json:"id"` // TODO: do we need pointer here?
+	Id      *json.RawMessage `json:"id"`
 	Method  string           `json:"method"`
 	Params  *json.RawMessage `json:"params"`
 }

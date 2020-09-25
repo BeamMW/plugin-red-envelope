@@ -10,7 +10,7 @@ import (
 
 type JsonParams map[string]interface{}
 
-func (api* API) rpcPost(method string, params interface {}) (res *json.RawMessage, err error) {
+func (api *API) rpcPost(method string, params interface{}) (res *json.RawMessage, err error) {
 	var pbytes []byte
 	if pbytes, err = json.Marshal(params); err != nil {
 		return

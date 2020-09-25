@@ -10,18 +10,18 @@ const (
 )
 
 type Address struct {
-	Address   string `json:"address"`
-	Comment   string `json:"comment"`
-	Expired   bool   `json:"expired"`
-	Duration  uint64 `json:"duration"`
+	Address  string `json:"address"`
+	Comment  string `json:"comment"`
+	Expired  bool   `json:"expired"`
+	Duration uint64 `json:"duration"`
 }
 
 type AddrList []Address
 
-func (api* API) CreateAddress(comment string, expiration Expiration) (addr string, err error) {
+func (api *API) CreateAddress(comment string, expiration Expiration) (addr string, err error) {
 	var params = JsonParams{
 		"expiration": expiration,
-		"comment": comment,
+		"comment":    comment,
 	}
 
 	var res *json.RawMessage
@@ -33,7 +33,7 @@ func (api* API) CreateAddress(comment string, expiration Expiration) (addr strin
 	return
 }
 
-func (api* API) OwnAddrList() (list AddrList, err error) {
+func (api *API) OwnAddrList() (list AddrList, err error) {
 	var params = JsonParams{
 		"own": true,
 	}

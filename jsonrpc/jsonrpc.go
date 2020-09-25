@@ -14,7 +14,6 @@ func getIdStr(rawid *json.RawMessage) string {
 	return string(*rawid)
 }
 
-
 func ProcessMessage(msg []byte, debug bool, handler RpcHandler) (response []byte) {
 	var err error
 	var errCode RpcErrCode
@@ -22,7 +21,7 @@ func ProcessMessage(msg []byte, debug bool, handler RpcHandler) (response []byte
 	var requestId *json.RawMessage
 	var requestResult interface{}
 
-	defer func () {
+	defer func() {
 		if err == nil {
 			if requestResult != nil {
 				var resp = RPCResponse{
@@ -43,10 +42,10 @@ func ProcessMessage(msg []byte, debug bool, handler RpcHandler) (response []byte
 		if err != nil {
 			var errFmt = `{"jsonrpc":"2.0", "id": "-1", "error": {"code": %v, "message": "%v"}}`
 			var rpcError = fmt.Sprintf(errFmt, errCode, err.Error())
-			log.Printf("jsonrpc error: %v", rpcError)
+			log.Printf("WARNING: jsonrpc error: %v", rpcError)
 			response = []byte(rpcError)
 		}
-	} ()
+	}()
 
 	var header = RPCHeader{}
 	if err := json.Unmarshal(msg, &header); err != nil {
@@ -55,13 +54,13 @@ func ProcessMessage(msg []byte, debug bool, handler RpcHandler) (response []byte
 	}
 
 	if header.Error != nil {
-		log.Printf("jsonrpc, received error response for id [%v], result %v", getIdStr(header.Id), string(*header.Error))
+		log.Printf("WARNING: jsonrpc, received error response for id [%v], result %v", getIdStr(header.Id), string(*header.Error))
 		return
 	}
 
 	if header.Result != nil {
 		if debug {
-			log.Printf("jsonrpc, received response for id [%v], result %v", getIdStr(header.Id), string(*header.Result))
+			log.Printf("WARNING: jsonrpc, received response for id [%v], result %v", getIdStr(header.Id), string(*header.Result))
 		}
 		return
 	}
@@ -119,7 +118,7 @@ func WrapMessage(id string, msg interface{}) ([]byte, error) {
 	rawmsg := json.RawMessage(bres)
 	resp.Result = &rawmsg
 
-	var response [] byte
+	var response []byte
 	if response, err = json.Marshal(resp); err != nil {
 		return nil, err
 	}

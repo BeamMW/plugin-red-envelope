@@ -10,11 +10,11 @@ import (
 )
 
 var (
-	DB* database.Database
-	Game* game.Game
+	DB   *database.Database
+	Game *game.Game
 )
 
-func main () {
+func main() {
 	flag.Parse()
 	args := flag.Args()
 
@@ -47,12 +47,12 @@ func main () {
 
 	DB, err = database.New(config.DatabasePath)
 	if err != nil {
-		panic (err)
+		panic(err)
 	}
 
 	Game, err = game.New(DB, config.WalletAPIAddress)
 	if err != nil {
-		panic (err)
+		panic(err)
 	}
 
 	// Automatically update status of all active users
@@ -70,7 +70,7 @@ func main () {
 	//
 	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
 		if err := m.HandleRequest(w, r); err != nil {
-			log.Printf("websocket handle request error, %v", err)
+			log.Printf("WARNING: websocket handle request error, %v", err)
 		}
 	})
 
@@ -78,10 +78,10 @@ func main () {
 		go func() {
 			if resp := onClientMessage(session, msg); resp != nil {
 				if err := session.Write(resp); err != nil {
-					log.Printf("websocket jsonRpcProcessWallet error, %v", err)
+					log.Printf("WARNING: websocket jsonRpcProcessWallet error, %v", err)
 				}
 			}
-		} ()
+		}()
 	})
 
 	m.HandleConnect(func(session *melody.Session) {
@@ -89,25 +89,25 @@ func main () {
 			log.Printf("websocket server new session %v", session)
 		}
 		if err := onClientConnect(session); err != nil {
-			log.Printf("websocket onClientConnect error, %v", err)
+			log.Printf("WARNING: websocket onClientConnect error, %v", err)
 		}
 	})
 
 	m.HandleDisconnect(func(session *melody.Session) {
 		if err := onClientDisconnect(session); err != nil {
-			log.Printf("websocket onClientDisconnect error, %v", err)
+			log.Printf("WARNING: websocket onClientDisconnect error, %v", err)
 		}
 	})
 
 	m.HandlePong(func(session *melody.Session) {
 		if err := onClientPong(session); err != nil {
-			log.Printf("websocket onClientPong error, %v", err)
+			log.Printf("WARNING: websocket onClientPong error, %v", err)
 		}
 	})
 
 	m.HandleError(func(session *melody.Session, err error) {
 		if config.Debug {
-			log.Printf("websocket error, %v", err)
+			log.Printf("WARNING: websocket error, %v", err)
 		}
 	})
 

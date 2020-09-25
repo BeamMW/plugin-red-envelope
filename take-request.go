@@ -14,7 +14,7 @@ type takeResult struct {
 	Amount uint64 `json:"amount"`
 }
 
-func onClientTake(session* melody.Session, params *json.RawMessage) (res takeResult, err error) {
+func onClientTake(session *melody.Session, params *json.RawMessage) (res takeResult, err error) {
 	var req widthdrawParams
 	if err = json.Unmarshal(*params, &req); err != nil {
 		return
@@ -22,7 +22,7 @@ func onClientTake(session* melody.Session, params *json.RawMessage) (res takeRes
 
 	var uid string
 	if uid, err = getUserID(session); err != nil {
-		log.Println(err)
+		panic(err)
 	}
 
 	if config.Debug {

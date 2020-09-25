@@ -2,6 +2,8 @@ package game
 
 func (game *Game) Take(uid UID) (uint64, error) {
 	game.lock()
+	defer game.unlock()
+
 	var amount uint64
 	var err error
 
@@ -13,6 +15,5 @@ func (game *Game) Take(uid UID) (uint64, error) {
 		return true
 	})
 
-	game.unlock()
 	return amount, err
 }

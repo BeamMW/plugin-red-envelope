@@ -139,14 +139,12 @@ func (game *Game) collectStatus() {
 
 			var newStatus *Status
 			game.lock()
-				var envelopeRemaining = envelopeIncome - game.envelope.Taken
-
 				// if somebody deposited, allow to take for everyone even if participated before
-				if envelopeRemaining > game.envelope.Remaining {
+				if envelopeIncome > 0 {
 					game.envelope.LastTakes = make(TakesList)
 				}
 
-				game.envelope.Remaining = envelopeRemaining
+				game.envelope.Remaining += envelopeIncome
 				game.envelope.Incoming = envelopeIncoming
 				game.envelope.save()
 

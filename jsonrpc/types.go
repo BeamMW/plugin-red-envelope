@@ -2,7 +2,7 @@ package jsonrpc
 
 import "encoding/json"
 
-type RPCHeader struct {
+type FullHeader struct {
 	Jsonrpc string           `json:"jsonrpc"`
 	Id      *json.RawMessage `json:"id"`
 	Result  *json.RawMessage `json:"result"`
@@ -11,17 +11,23 @@ type RPCHeader struct {
 	Method  string           `json:"method"`
 }
 
-type RPCRequest struct {
+type RequestHeader struct {
 	Jsonrpc string           `json:"jsonrpc"`
 	Id      *json.RawMessage `json:"id"`
 	Method  string           `json:"method"`
 	Params  *json.RawMessage `json:"params"`
 }
 
-type RPCResponse struct {
+type ResponseHeader struct {
 	Jsonrpc string           `json:"jsonrpc"`
 	Id      *json.RawMessage `json:"id"`
 	Result  *json.RawMessage `json:"result"`
+}
+
+type MessageHeader struct {
+	Jsonrpc string           `json:"jsonrpc"`
+	Method  string           `json:"method"`
+	Params  *json.RawMessage `json:"params"`
 }
 
 type RpcErrCode int

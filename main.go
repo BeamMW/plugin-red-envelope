@@ -61,9 +61,16 @@ func main() {
 	//
 	// HTTP API
 	//
-
 	// Now just hello
 	http.HandleFunc("/", helloRequest)
+
+	// File server
+	if len(config.StaticFiles) != 0 && len(config.StaticEndpoint) != 0 {
+		log.Printf("Serving static files from %s at %s", config.StaticFiles, config.StaticEndpoint)
+		fs := http.FileServer(http.Dir(config.StaticFiles))
+		strip := http.StripPrefix(config.StaticEndpoint, fs)
+		http.Handle(config.StaticEndpoint, strip)
+	}
 
 	//
 	// JsonRPCv2.0 over WebSockets

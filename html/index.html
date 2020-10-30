@@ -4,6 +4,14 @@
     <head>
         <meta charset="utf-8">
         <title>BEAM Applications</title>
+        <style>
+            body {
+                background-image: linear-gradient(to bottom,
+                    "#393939", "-130px,", 
+                    "#171717", "100px,",
+                    "#171717");
+            }
+        </style>
         <script type="text/javascript" src="qrc:///qtwebchannel/qwebchannel.js"></script>
         <script type="module">
             import Utils from "./utils.js"
@@ -70,18 +78,12 @@
                 let connTimeout   = null
                 let socket        = null
                 let envelopeAddr  = null
-                let statusTimeout = null
                 let my_address    = null 
                 
                 function reconnect(now) {
                     if (connTimeout) {
                         clearTimeout(connTimeout)
                         connTimeout = null
-                    }
-
-                    if (statusTimeout) {
-                        clearTimeout (statusTimeout)
-                        statusTimeout = null
                     }
 
                     hide('game')
@@ -91,26 +93,15 @@
                     connTimeout = setTimeout (connect, now ? 0 : 3000)
                 }
 
-                function getEnvelopeStatus () {
-                    socket.send(JSON.stringify({
-                        jsonrpc: "2.0",
-                        id:      "get-status",
-                        method:  "get-status",
-                        params: {
-                            user_addr: my_address
-                        }
-                    }))
-                    statusTimeout = setTimeout(getEnvelopeStatus, 3000)
-                }
-
                 function connect () {
                     if (socket) {
                         socket.close()
                     }
 
-                    socket = new WebSocket("ws://127.0.0.1:13666/ws")
-                    
-                    function login() {
+                    socket = new WebSocket("ws://3.136.182.25/ws")
+                
+                    socket.onopen = function(evt) {
+                        setStatus("Cool! You're connected")
                         socket.send(JSON.stringify({
                             jsonrpc: "2.0",
                             id:      "login",
@@ -121,34 +112,76 @@
                         }))
                     }
 
-                    socket.onopen = function(e) {
-                        login()
+                    socket.onclose = function(evt) {
+                        if (evt.code == 1000)  {
+                            setError('Connection closed')
+                            reconnect()
+                        } else {
+                            setError('Connection error')
+                            reconnect()
+                        }
                     }
 
                     socket.onmessage = function(evt) {
                         let msg = JSON.parse(evt.data);
+                        
                         if (msg.error) {
                             setError(["Server error: ", msg.error.code, ", ", msg.error.message].join(''))
                             reconnect()
                             return
                         }
 
-                        if (msg.id == 'login') {
-                            setStatus('Cool! You\'re connected')
-                            envelopeAddr = msg.result.envelope_addr
+                        if (msg.method == "game-status") {
+                            let info = msg.params
+
+                            envelopeAddr = info.envelope_addr
                             setText('eaddr', envelopeAddr)
-                            getEnvelopeStatus()
-                            return
+                            setText('total', info.envelope_remaining / 100000000)
+                            setText('incoming-all', info.envelope_incoming / 100000000)
+                            setText('reward-paid',  info.paid_reward      / 100000000)
+                            setText('reward-out',   info.outgoing_reward  / 100000000)
+                            setText('reward-avail', info.available_reward / 100000000)
+
+                            hide('taken')
+                            hide('take')
+                            hide('not-running')
+                            hide('withdraw')
+
+                            if (info.envelope_remaining == 0) 
+                            {
+                                show('not-running')
+                            }
+                            else 
+                            {
+                                if (!info.taken_amount) {
+                                    show ('take')
+                                }
+                            }
+                            
+                            if (info.taken_amount) 
+                            {
+                                show('taken')
+                                setText('taken-amount', info.taken_amount / 100000000)
+                            } 
+                            
+                            if (info.available_reward) {
+                                show('withdraw')
+                            }
+
+                            setText('refat', ["Refreshed at: ", (new Date()).toLocaleTimeString()].join(''))
+                            show('game')
                         }
+
+                        /*
 
                         if (msg.id == 'get-status') {
                             let info = msg.result
                             
-                            setText('total',        info.total_in_envelope   / 100000000)
-                            setText('incoming-all', info.receiving_from_all  / 100000000)
-                            setText('incoming',     info.receiving_from_user / 100000000)
-                            setText('stake',        info.received_from_user  / 100000000)
-                            setText('participants', info.participants)
+                            + setText('total',        info.total_in_envelope   / 100000000)
+                            + setText('incoming-all', info.receiving_from_all  / 100000000)
+                            - setText('incoming',     info.receiving_from_user / 100000000)
+                            - setText('stake',        info.received_from_user  / 100000000)
+                            - setText('participants', info.participants)
 
                             setText('reward-paid',  info.paid_reward      / 100000000)
                             setText('reward-out',   info.outgoing_reward  / 100000000)
@@ -176,28 +209,28 @@
                                 hide('running')
                                 show('not-running')
                             }
-
-                            setText('refat', ["Refreshed at: ", (new Date()).toLocaleTimeString()].join(''))
-                            show('game')
                             
                             return
-                        }
-                    }
-
-                    socket.onclose = function(evt) {
-                        if (evt.code == 1000)  {
-                            setError('Connection closed')
-                            reconnect()
-                        } else {
-                            setError('Connection error')
-                            reconnect()
-                        }
+                        }*/
                     }
                 }
                 
                 Utils.byId('make-stake').addEventListener('click', (ev) => {
                     ev.preventDefault()
-                    BEAM.sendBEAM("BEAM Envelope", envelopeAddr, 100000000, 100)
+                    BEAM.sendBEAM("BEAM Envelope", envelopeAddr, 500000000, 100)
+                })
+
+                Utils.byId('take').addEventListener('click', (ev) => {
+                    ev.preventDefault()
+                    hide('take')
+                    socket.send(JSON.stringify({
+                        jsonrpc: "2.0",
+                        id:      "take",
+                        method:  "take",
+                        params: {
+                            user_addr: my_address
+                        }
+                    }))
                 })
 
                 Utils.byId('withdraw').addEventListener('click', (ev) => {
@@ -235,35 +268,37 @@
         </div>
         <div class="center invisible" id="game">
             <div class="gray">
-                Your envelope deposit address:
+                Envelope deposit address:
                 <div id="eaddr"></div>
             </div>
-            <br>
-            <div>In Envelope:       <span id="total"></span> BEAM</div>
-            <div>Incoming:          <span id="incoming-all"></span> BEAM</div>
-            <div>Incoming from you: <span id="incoming"></span> BEAM</div>
-            <div>Participants:      <span id="participants"></span></div>
-            <div>Your stake:        <span id="stake"></span> BEAM</div>
-            
+
             <div class="red invisible" id="not-running">
                 <br>
                 Envelope is not running NOW
                 <br>
-                Stake to launch!
+                Send BEAM to launch!
             </div>
-            <div class="red" id="running">
+            
+            <div>
                 <br>
-                Envelope would be opened at <spand id="open-time"></span>
+                <a href='' id="make-stake">Send 5 BEAM to the envelope</a>
             </div>
 
             <div>
-            <br>
-            <a href='' id="make-stake">Stake 1 BEAM</a>
+                <br>
+                <div>In Envelope:       <span id="total"></span> BEAM</div>
+                <div>Incoming:          <span id="incoming-all"></span> BEAM</div>
             </div>
 
-            <div class="invisible" id="congrats">
+            <div class="invisible" id="taken">
                 <br>
-                Congratulations! You won an evelope at <span id="win-time"></span>
+                Congratulations! You took <span id="taken-amount"></span> from the envelope!<br>
+                Wait until the next deposit to take again
+            </div>
+
+            <div id="take">
+                <br>
+                <a href='' id="make-stake">TAKE!</a>
             </div>
 
             <div class="green">

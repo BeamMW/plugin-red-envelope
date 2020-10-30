@@ -19,7 +19,7 @@ func (api *API) rpcPost(method string, params interface{}) (res *json.RawMessage
 	rawId := json.RawMessage(`"http-dummy"`)
 	rawParams := json.RawMessage(pbytes)
 
-	request := jsonrpc.RPCRequest{
+	request := jsonrpc.RequestHeader {
 		Jsonrpc: "2.0",
 		Id:      &rawId,
 		Method:  method,
@@ -43,7 +43,7 @@ func (api *API) rpcPost(method string, params interface{}) (res *json.RawMessage
 		return
 	}
 
-	var rpcr jsonrpc.RPCResponse
+	var rpcr jsonrpc.ResponseHeader
 	if err = json.Unmarshal(body, &rpcr); err != nil {
 		return
 	}

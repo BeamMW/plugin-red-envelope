@@ -18,6 +18,8 @@ type Config struct {
 	LogName          string
 	Debug            bool
 	ListenAddress    string
+	StaticFiles      string
+	StaticEndpoint   string
 	WalletAPIAddress string
 	DatabasePath     string
 	EnvelopeDuration time.Duration
@@ -26,6 +28,8 @@ type Config struct {
 var config = Config{
 	Debug:            true,
 	ListenAddress:    "127.0.0.1:13666",
+	StaticFiles:      "./html/",
+	StaticEndpoint:   "/app/",
 	WalletAPIAddress: "http://127.0.0.1:14666/api/wallet",
 	LogName:          "BEAM Red Envelope",
 	DatabasePath:     "./db-files",

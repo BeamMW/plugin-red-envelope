@@ -18,7 +18,7 @@ type statusResult struct {
 }
 
 const (
-	GameStatusId = "game-status"
+	GameStatusMethod = "game-status"
 )
 
 var (
@@ -49,7 +49,7 @@ func formStatusMsg(status *game.Status, session *melody.Session) ([]byte, error)
 	res.RewardAvailable = user.AvailableReward()
 
 	var bytes []byte
-	if bytes, err = jsonrpc.WrapMessage(GameStatusId, &res); err != nil {
+	if bytes, err = jsonrpc.WrapNotification(GameStatusMethod, &res); err != nil {
 		return nil, err
 	}
 
@@ -69,7 +69,7 @@ func broadcastStatus(m *melody.Melody) {
 
 		for {
 			select {
-			case session := <-statusReq:
+			case session := <- statusReq:
 				var bytes []byte
 				var err error
 
@@ -83,7 +83,7 @@ func broadcastStatus(m *melody.Melody) {
 					break
 				}
 
-			case currStatus = <-Game.NewStatus:
+			case currStatus = <- Game.NewStatus:
 				var bytes []byte
 				var err error
 

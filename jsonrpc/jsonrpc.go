@@ -1,11 +1,6 @@
 package jsonrpc
 
-import (
-	"encoding/json"
-	"errors"
-	"fmt"
-	"log"
-)
+import "encoding/json"
 
 func getIdStr(rawid *json.RawMessage) string {
 	if rawid == nil {
@@ -14,114 +9,87 @@ func getIdStr(rawid *json.RawMessage) string {
 	return string(*rawid)
 }
 
-func ProcessMessage(msg []byte, debug bool, handler RpcHandler) (response []byte) {
-	var err error
-	var errCode RpcErrCode
-
-	var requestId *json.RawMessage
-	var requestResult interface{}
-
-	defer func() {
-		if err == nil {
-			if requestResult != nil {
-				var resp = RPCResponse{
-					Jsonrpc: "2.0",
-					Id:      requestId,
-				}
-
-				var bres []byte
-				if bres, err = json.Marshal(requestResult); err == nil {
-					rawmsg := json.RawMessage(bres)
-					resp.Result = &rawmsg
-					response, err = json.Marshal(resp)
-					// do not return, we want to fall down to error handling
-				}
-			}
-		}
-
-		if err != nil {
-			var errFmt = `{"jsonrpc":"2.0", "id": "-1", "error": {"code": %v, "message": "%v"}}`
-			var rpcError = fmt.Sprintf(errFmt, errCode, err.Error())
-			log.Printf("WARNING: jsonrpc error: %v", rpcError)
-			response = []byte(rpcError)
-		}
-	}()
-
-	var header = RPCHeader{}
-	if err := json.Unmarshal(msg, &header); err != nil {
-		errCode = ErrParse
-		return
+func wrapAny (any interface{}) (*json.RawMessage, error) {
+	if  res, ok := any.(*json.RawMessage); ok {
+		return res, nil
 	}
 
-	if header.Error != nil {
-		log.Printf("WARNING: jsonrpc, received error response for id [%v], result %v", getIdStr(header.Id), string(*header.Error))
-		return
-	}
-
-	if header.Result != nil {
-		if debug {
-			log.Printf("WARNING: jsonrpc, received response for id [%v], result %v", getIdStr(header.Id), string(*header.Result))
-		}
-		return
-	}
-
-	//
-	// Assume we're dealing with request (method call)
-	//
-	if requestId = header.Id; header.Id == nil {
-		errCode = ErrInvalidReq
-		err = fmt.Errorf("missing jsonrpc id")
-		return
-	}
-
-	if header.Jsonrpc != "2.0" {
-		errCode = ErrInvalidReq
-		err = fmt.Errorf("bad jsonrpc version %v", header.Jsonrpc)
-		return
-	}
-
-	if header.Params == nil {
-		err = errors.New("bad jsonrpc, params are nil")
-		errCode = ErrInvalidReq
-		return
-	}
-
-	if len(header.Method) == 0 {
-		err = errors.New("bad jsonrpc, empty method")
-		errCode = ErrInvalidReq
-		return
-	}
-
-	requestResult, errCode, err = handler(header.Method, header.Params)
-	return
-}
-
-func WrapMessage(id string, msg interface{}) ([]byte, error) {
 	var bytesid []byte
 	var err error
 
-	if bytesid, err = json.Marshal(id); err != nil {
+	if bytesid, err = json.Marshal(any); err != nil {
 		return nil, err
 	}
 
-	var rawid = json.RawMessage(bytesid)
-	var resp = RPCResponse{
+	var res = json.RawMessage(bytesid)
+	return &res, nil
+}
+
+func WrapNotification (method string, msg interface{}) ([]byte, error) {
+	var err error
+	var rawmsg *json.RawMessage
+
+	if rawmsg, err = wrapAny(msg); err != nil {
+		return nil, err
+	}
+
+	var nt = MessageHeader {
 		Jsonrpc: "2.0",
-		Id:      &rawid,
+		Method:  method,
+		Params:  rawmsg,
 	}
 
 	var bres []byte
-	if bres, err = json.Marshal(msg); err != nil {
+	if bres, err = json.Marshal(&nt); err != nil {
 		return nil, err
 	}
 
-	rawmsg := json.RawMessage(bres)
-	resp.Result = &rawmsg
+	return bres, nil
+}
+
+func WrapResponse (id interface{}, msg interface{}) ([]byte, error) {
+	var rawid, rawmsg *json.RawMessage
+	var err error
+
+	if rawid, err = wrapAny(id); err != nil {
+		return nil, err
+	}
+
+	if rawmsg, err = wrapAny(msg); err != nil {
+		return nil, err
+	}
+
+	var resp = ResponseHeader {
+		Jsonrpc: "2.0",
+		Id:      rawid,
+		Result:  rawmsg,
+	}
 
 	var response []byte
-	if response, err = json.Marshal(resp); err != nil {
+	if response, err = json.Marshal(&resp); err != nil {
 		return nil, err
 	}
 
 	return response, nil
 }
+
+
+
+/*
+// WrapError returns []byte representation of the error response
+// This function never fails
+// id can be string or *json.RawMessage or nil (interpreted as "-1")
+func WrapError (id interface{}, code int, message string) [] byte {
+
+	if id == nil {
+		id = "-1"
+	}
+	// We go here without using ErrorHeader and avoid json marshaling
+	// to be sure that this function never fails itself
+	var errFmt = `{"jsonrpc":"2.0", "id": "%v", "error": {"code": %v, "message": "%v"}}`
+	var rpcError = fmt.Sprintf(errFmt, code, err.Error())
+
+	log.Printf("WARNING: jsonrpc error: %v", rpcError)
+	return  []byte(rpcError)
+}
+*/

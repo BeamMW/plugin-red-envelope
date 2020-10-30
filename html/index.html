@@ -6,258 +6,15 @@
         <title>BEAM Applications</title>
         <style>
             body {
-                background-image: linear-gradient(to bottom,
-                    "#393939", "-130px,", 
-                    "#171717", "100px,",
-                    "#171717");
+                color: #ffffff;
+                background-image: linear-gradient(
+                    #393939 -130px, 
+                    #171717 100px,
+                    #171717);
             }
         </style>
-        <script type="text/javascript" src="qrc:///qtwebchannel/qwebchannel.js"></script>
-        <script type="module">
-            import Utils from "./utils.js"
-    
-            let BEAM = null
-            let errTimeout = null
-
-            function setText(id, text) {
-                Utils.byId(id).innerText = text
-            }
-
-            function setStatus(text) {
-                setText('status', text)
-            }
-
-            function setError(text) {
-                setText('error', text)
-                if (errTimeout) {
-                    clearTimeout(errTimeout)   
-                }
-                errTimeout = setTimeout(() => setError(""), 3000)
-            }
-
-            function show(id) {
-                let obj = Utils.byId(id)
-                obj.classList.remove('invisible')
-            }
-
-            function hide(id) {
-                let obj = Utils.byId(id)
-                obj.classList.add('invisible')
-            }
-            
-            Utils.byId('refresh').addEventListener('click', () => {
-                Utils.reload()
-                return false
-            })
-    
-            Utils.onLoad(async (beamAPI) => {
-                BEAM = beamAPI
-    
-                // Just to be sure that everything is loaded, should return an ultimate answer
-                // let res = await BEAM.test()
-                // Utils.byId('title').innerText += ' ' + res;
-
-                //
-                // Make everything beautiful
-                //
-
-                // TODO: dirty hack, make correct
-                document.body.style.backgroundImage = [
-                    "linear-gradient(to bottom,",
-                    BEAM.style.background_main_top, "-130px,", 
-                    BEAM.style.background_main, "100px,",
-                    BEAM.style.background_main
-                ].join(' ')
-
-                document.body.style.color = BEAM.style.content_main
-                Utils.byId('error').style.color = BEAM.style.validator_error
-
-                //
-                // Let's start
-                //
-                let connTimeout   = null
-                let socket        = null
-                let envelopeAddr  = null
-                let my_address    = null 
-                
-                function reconnect(now) {
-                    if (connTimeout) {
-                        clearTimeout(connTimeout)
-                        connTimeout = null
-                    }
-
-                    hide('game')
-                    setStatus('Reconnecting...')
-
-                    socket = null
-                    connTimeout = setTimeout (connect, now ? 0 : 3000)
-                }
-
-                function connect () {
-                    if (socket) {
-                        socket.close()
-                    }
-
-                    socket = new WebSocket("ws://3.136.182.25/ws")
-                
-                    socket.onopen = function(evt) {
-                        setStatus("Cool! You're connected")
-                        socket.send(JSON.stringify({
-                            jsonrpc: "2.0",
-                            id:      "login",
-                            method:  "login",
-                            params: {
-                                user_addr: my_address
-                            }
-                        }))
-                    }
-
-                    socket.onclose = function(evt) {
-                        if (evt.code == 1000)  {
-                            setError('Connection closed')
-                            reconnect()
-                        } else {
-                            setError('Connection error')
-                            reconnect()
-                        }
-                    }
-
-                    socket.onmessage = function(evt) {
-                        let msg = JSON.parse(evt.data);
-                        
-                        if (msg.error) {
-                            setError(["Server error: ", msg.error.code, ", ", msg.error.message].join(''))
-                            reconnect()
-                            return
-                        }
-
-                        if (msg.method == "game-status") {
-                            let info = msg.params
-
-                            envelopeAddr = info.envelope_addr
-                            setText('eaddr', envelopeAddr)
-                            setText('total', info.envelope_remaining / 100000000)
-                            setText('incoming-all', info.envelope_incoming / 100000000)
-                            setText('reward-paid',  info.paid_reward      / 100000000)
-                            setText('reward-out',   info.outgoing_reward  / 100000000)
-                            setText('reward-avail', info.available_reward / 100000000)
-
-                            hide('taken')
-                            hide('take')
-                            hide('not-running')
-                            hide('withdraw')
-
-                            if (info.envelope_remaining == 0) 
-                            {
-                                show('not-running')
-                            }
-                            else 
-                            {
-                                if (!info.taken_amount) {
-                                    show ('take')
-                                }
-                            }
-                            
-                            if (info.taken_amount) 
-                            {
-                                show('taken')
-                                setText('taken-amount', info.taken_amount / 100000000)
-                            } 
-                            
-                            if (info.available_reward) {
-                                show('withdraw')
-                            }
-
-                            setText('refat', ["Refreshed at: ", (new Date()).toLocaleTimeString()].join(''))
-                            show('game')
-                        }
-
-                        /*
-
-                        if (msg.id == 'get-status') {
-                            let info = msg.result
-                            
-                            + setText('total',        info.total_in_envelope   / 100000000)
-                            + setText('incoming-all', info.receiving_from_all  / 100000000)
-                            - setText('incoming',     info.receiving_from_user / 100000000)
-                            - setText('stake',        info.received_from_user  / 100000000)
-                            - setText('participants', info.participants)
-
-                            setText('reward-paid',  info.paid_reward      / 100000000)
-                            setText('reward-out',   info.outgoing_reward  / 100000000)
-                            setText('reward-avail', info.available_reward / 100000000)
-                            
-                            if (info.can_withdraw) {
-                                show('withdraw')
-                            } else {
-                                hide('withdraw')
-                            }
-
-                            if (info.last_win_time) {
-                                show('congrats')
-                                setText('win-time', (new Date(info.last_win_time * 1000)).toLocaleTimeString())
-                            } 
-                            else {
-                               hide('congrats')
-                            }
-
-                            if (info.envelope_open_time) {
-                                hide('not-running')
-                                show('running')
-                                setText('open-time', (new Date(info.envelope_open_time * 1000)).toLocaleTimeString())
-                            } else {
-                                hide('running')
-                                show('not-running')
-                            }
-                            
-                            return
-                        }*/
-                    }
-                }
-                
-                Utils.byId('make-stake').addEventListener('click', (ev) => {
-                    ev.preventDefault()
-                    BEAM.sendBEAM("BEAM Envelope", envelopeAddr, 500000000, 100)
-                })
-
-                Utils.byId('take').addEventListener('click', (ev) => {
-                    ev.preventDefault()
-                    hide('take')
-                    socket.send(JSON.stringify({
-                        jsonrpc: "2.0",
-                        id:      "take",
-                        method:  "take",
-                        params: {
-                            user_addr: my_address
-                        }
-                    }))
-                })
-
-                Utils.byId('withdraw').addEventListener('click', (ev) => {
-                    ev.preventDefault()
-                    hide('withdraw')
-                    socket.send(JSON.stringify({
-                        jsonrpc: "2.0",
-                        id:      "withdraw",
-                        method:  "withdraw",
-                        params: {
-                            user_addr: my_address
-                        }
-                    }))
-                })
-
-                BEAM.permanentAddressGenerated.connect((address) => {
-                    my_address = address
-                    connect()
-                })
-                
-                // Go!
-                BEAM.generatePermanentAddress("BEAM Envelope Withdraw")
-
-            })
-        </script>
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300&display=swap" rel="stylesheet">
         <link href="styles.css" rel="stylesheet">
+        <!-- link rel="stylesheet" href="fonts.css" media="print" onload="this.media='all'" -->
     </head>
     <body>
         <div class="center">
@@ -320,5 +77,249 @@
             <a href="" id="refresh">Reload</a>
         </div>
     </body>
+    <script type="text/javascript" src="qrc:///qtwebchannel/qwebchannel.js" async></script>
+    <script type="module" async>
+        import Utils from "./utils.js"
+
+        let BEAM = null
+        let errTimeout = null
+
+        function setText(id, text) {
+            Utils.byId(id).innerText = text
+        }
+
+        function setStatus(text) {
+            setText('status', text)
+        }
+
+        function setError(text) {
+            setText('error', text)
+            if (errTimeout) {
+                clearTimeout(errTimeout)   
+            }
+            errTimeout = setTimeout(() => setError(""), 3000)
+        }
+
+        function show(id) {
+            let obj = Utils.byId(id)
+            obj.classList.remove('invisible')
+        }
+
+        function hide(id) {
+            let obj = Utils.byId(id)
+            obj.classList.add('invisible')
+        }
+        
+        Utils.byId('refresh').addEventListener('click', () => {
+            Utils.reload()
+            return false
+        })
+
+        Utils.onLoad(async (beamAPI) => {
+            BEAM = beamAPI
+
+            // Just to be sure that everything is loaded, should return an ultimate answer
+            // let res = await BEAM.test()
+            // Utils.byId('title').innerText += ' ' + res;
+
+            //
+            // Make everything beautiful
+            //
+
+            // TODO: dirty hack, make correct
+            document.body.style.backgroundImage = [
+                "linear-gradient(to bottom,",
+                BEAM.style.background_main_top, "-130px,", 
+                BEAM.style.background_main, "100px,",
+                BEAM.style.background_main
+            ].join(' ')
+
+            document.body.style.color = BEAM.style.content_main
+            Utils.byId('error').style.color = BEAM.style.validator_error
+
+            //
+            // Let's start
+            //
+            let connTimeout   = null
+            let socket        = null
+            let envelopeAddr  = null
+            let my_address    = null 
+            
+            function reconnect(now) {
+                if (connTimeout) {
+                    clearTimeout(connTimeout)
+                    connTimeout = null
+                }
+
+                hide('game')
+                setStatus('Reconnecting...')
+
+                socket = null
+                connTimeout = setTimeout (connect, now ? 0 : 3000)
+            }
+
+            function connect () {
+                if (socket) {
+                    socket.close()
+                }
+
+                socket = new WebSocket("ws://3.136.182.25/ws")
+            
+                socket.onopen = function(evt) {
+                    setStatus("Cool! You're connected")
+                    socket.send(JSON.stringify({
+                        jsonrpc: "2.0",
+                        id:      "login",
+                        method:  "login",
+                        params: {
+                            user_addr: my_address
+                        }
+                    }))
+                }
+
+                socket.onclose = function(evt) {
+                    if (evt.code == 1000)  {
+                        setError('Connection closed')
+                        reconnect()
+                    } else {
+                        setError('Connection error')
+                        reconnect()
+                    }
+                }
+
+                socket.onmessage = function(evt) {
+                    let msg = JSON.parse(evt.data);
+                    
+                    if (msg.error) {
+                        setError(["Server error: ", msg.error.code, ", ", msg.error.message].join(''))
+                        reconnect()
+                        return
+                    }
+
+                    if (msg.method == "game-status") {
+                        let info = msg.params
+
+                        envelopeAddr = info.envelope_addr
+                        setText('eaddr', envelopeAddr)
+                        setText('total', info.envelope_remaining / 100000000)
+                        setText('incoming-all', info.envelope_incoming / 100000000)
+                        setText('reward-paid',  info.paid_reward      / 100000000)
+                        setText('reward-out',   info.outgoing_reward  / 100000000)
+                        setText('reward-avail', info.available_reward / 100000000)
+
+                        hide('taken')
+                        hide('take')
+                        hide('not-running')
+                        hide('withdraw')
+
+                        if (info.envelope_remaining == 0) 
+                        {
+                            show('not-running')
+                        }
+                        else 
+                        {
+                            if (!info.taken_amount) {
+                                show ('take')
+                            }
+                        }
+                        
+                        if (info.taken_amount) 
+                        {
+                            show('taken')
+                            setText('taken-amount', info.taken_amount / 100000000)
+                        } 
+                        
+                        if (info.available_reward) {
+                            show('withdraw')
+                        }
+
+                        setText('refat', ["Refreshed at: ", (new Date()).toLocaleTimeString()].join(''))
+                        show('game')
+                    }
+
+                    /*
+
+                    if (msg.id == 'get-status') {
+                        let info = msg.result
+                        
+                        + setText('total',        info.total_in_envelope   / 100000000)
+                        + setText('incoming-all', info.receiving_from_all  / 100000000)
+                        - setText('incoming',     info.receiving_from_user / 100000000)
+                        - setText('stake',        info.received_from_user  / 100000000)
+                        - setText('participants', info.participants)
+
+                        setText('reward-paid',  info.paid_reward      / 100000000)
+                        setText('reward-out',   info.outgoing_reward  / 100000000)
+                        setText('reward-avail', info.available_reward / 100000000)
+                        
+                        if (info.can_withdraw) {
+                            show('withdraw')
+                        } else {
+                            hide('withdraw')
+                        }
+
+                        if (info.last_win_time) {
+                            show('congrats')
+                            setText('win-time', (new Date(info.last_win_time * 1000)).toLocaleTimeString())
+                        } 
+                        else {
+                            hide('congrats')
+                        }
+
+                        if (info.envelope_open_time) {
+                            hide('not-running')
+                            show('running')
+                            setText('open-time', (new Date(info.envelope_open_time * 1000)).toLocaleTimeString())
+                        } else {
+                            hide('running')
+                            show('not-running')
+                        }
+                        
+                        return
+                    }*/
+                }
+            }
+            
+            Utils.byId('make-stake').addEventListener('click', (ev) => {
+                ev.preventDefault()
+                BEAM.sendBEAM("BEAM Envelope", envelopeAddr, 500000000, 100)
+            })
+
+            Utils.byId('take').addEventListener('click', (ev) => {
+                ev.preventDefault()
+                hide('take')
+                socket.send(JSON.stringify({
+                    jsonrpc: "2.0",
+                    id:      "take",
+                    method:  "take",
+                    params: {
+                        user_addr: my_address
+                    }
+                }))
+            })
+
+            Utils.byId('withdraw').addEventListener('click', (ev) => {
+                ev.preventDefault()
+                hide('withdraw')
+                socket.send(JSON.stringify({
+                    jsonrpc: "2.0",
+                    id:      "withdraw",
+                    method:  "withdraw",
+                    params: {
+                        user_addr: my_address
+                    }
+                }))
+            })
+
+            BEAM.permanentAddressGenerated.connect((address) => {
+                my_address = address
+                connect()
+            })
+            
+            // Go!
+            BEAM.generatePermanentAddress("BEAM Envelope Withdraw")
+
+        })
+    </script>
 </html>
 </body>

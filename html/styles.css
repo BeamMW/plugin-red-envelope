@@ -1,17 +1,3 @@
-@font-face {
-    font-family: "Proxima Nova Thin";
-    src: url("fonts/Proxima Nova Thin.otf");
-    font-weight: lighter;
-    font-style:  normal;
-}
-
-@font-face {
-    font-family: "Proxima Nova Regular";
-    src: url("fonts/Proxima Nova Regular.otf");
-    font-weight: normal;
-    font-style:  normal;
-}
-
 body {
     font-family: "Proxima Nova Regular";
     font-weight: normal;

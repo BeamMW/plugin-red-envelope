@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="112" height="140" viewBox="0 0 112 140">
+    <defs>
+        <filter id="9324cdjvpb" width="270.8%" height="272.5%" x="-85.4%" y="-86.3%" filterUnits="objectBoundingBox">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="0.0773207541 -12.9997701"/>
+        </filter>
+        <filter id="fek00643fc" width="268.6%" height="272%" x="-84.3%" y="-86%" filterUnits="objectBoundingBox">
+            <feOffset in="SourceAlpha" result="shadowOffsetOuter1"/>
+            <feGaussianBlur in="shadowOffsetOuter1" result="shadowBlurOuter1" stdDeviation="10"/>
+            <feColorMatrix in="shadowBlurOuter1" result="shadowMatrixOuter1" values="0 0 0 0 0 0 0 0 0 0.964705882 0 0 0 0 0.823529412 0 0 0 0.695285184 0"/>
+            <feMerge>
+                <feMergeNode in="shadowMatrixOuter1"/>
+                <feMergeNode in="SourceGraphic"/>
+            </feMerge>
+        </filter>
+        <radialGradient id="twoq33aqxa" cx="50%" cy="50%" r="50%" fx="50%" fy="50%" gradientTransform="matrix(0 1 -.99 0 .995 0)">
+            <stop offset="0%" stop-color="#008471"/>
+            <stop offset="100%" stop-color="#103051"/>
+        </radialGradient>
+    </defs>
+    <g fill="none" fill-rule="evenodd">
+        <g>
+            <g>
+                <g transform="translate(-501 -396) translate(100 389) translate(401 7)">
+                    <path fill="#F72C56" fill-rule="nonzero" d="M110.706 70.483l.483-.618.811.618v65.655c-.006 2.13-1.732 3.856-3.862 3.862H3.862c-2.13-.006-3.856-1.732-3.862-3.862V70.483l.811-.618.483.618h109.412z"/>
+                    <path fill="#BD1638" fill-rule="nonzero" d="M111.189 69.865l-.483.618-52.775 40.551H54.07L1.294 70.483l-.483-.618 18.5-14.386 25.45-19.755 8.902-6.913c1.37-1.081 3.303-1.081 4.673 0l8.903 6.913 25.45 19.755 18.5 14.386z"/>
+                    <ellipse cx="56.203" cy="72.949" fill="url(#twoq33aqxa)" stroke="#00F6D2" stroke-width="4" filter="url(#9324cdjvpb)" opacity=".701" rx="27.175" ry="26.923"/>
+                    <g filter="url(#fek00643fc)" transform="translate(31 28)">
+                        <g fill="url(#twoq33aqxa)" stroke="#00F6D2" stroke-width="4">
+                            <g>
+                                <ellipse cx="25.203" cy="24.949" rx="27.175" ry="26.923"/>
+                            </g>
+                        </g>
+                        <path fill="#FFF" fill-rule="nonzero" stroke="#FFF" d="M36.33 17.538c.717.718.717 1.881 0 2.598L24.003 32.462c-.718.717-1.88.717-2.598 0l-5.868-5.868c-.717-.717-.717-1.88 0-2.598.718-.717 1.88-.717 2.598 0l4.569 4.569L33.73 17.538c.718-.717 1.881-.717 2.598 0h0z"/>
+                    </g>
+                    <path fill="#F72C56" d="M1.294 70.483L54.069 111.034 57.931 111.034 110.706 70.483 111.189 69.865 112 70.483 112 136.138 0 136.138 0 70.483 0.811 69.865z"/>
+                    <path fill="#FF5A7C" fill-rule="nonzero" d="M111.247 138.416c-.72.998-1.878 1.588-3.109 1.584H3.862c-1.23.004-2.388-.586-3.109-1.584l44.24-34.353 8.67-6.739c1.37-1.081 3.304-1.081 4.674 0l8.67 6.74 44.24 34.352z"/>
+                </g>
+            </g>
+        </g>
+    </g>
+</svg>

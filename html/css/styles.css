@@ -1,10 +1,5 @@
 /* common start */
 
-@font-face {
-    font-family: "SFProDisplay";
-    src: url("../fonts/SFProDisplay-Regular.ttf");
-}
-
 body {
     font-family: 'SFProDisplay', sans-serif;
     font-weight: normal;

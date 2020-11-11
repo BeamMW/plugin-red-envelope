@@ -1,0 +1,54 @@
+body {
+    font-family: "Proxima Nova Regular";
+    font-weight: normal;
+}
+
+.center {
+    text-align: center;
+}
+
+.invisible {
+    display: none;
+}
+
+.green {
+    color: seagreen
+}
+
+.gray {
+    color: gray
+}
+
+.red {
+    color: lightcoral
+}
+
+#title {
+    font-family: "Proxima Nova Thin";    
+    font-size: 38px;
+}
+
+#error {
+    margin-top: 0.7em;
+}
+
+#game {
+    margin-top: 1.1em;
+    color: orange;
+}
+
+#make-stake {
+    color: #00f6d2;
+}
+
+#withdraw {
+    color: #00f6d2;
+}
+
+#eaddr {
+    
+}
+
+#congrats {
+    color: greenyellow;
+}

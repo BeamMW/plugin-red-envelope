@@ -4,6 +4,8 @@ const GROTHS_IN_BEAM = 100000000;
 const STAKE_FEE = 100;
 const TIMEOUT_VALUE = 3000;
 const WS_PATH = "ws://3.136.182.25/ws";
+const ADDR_COMMENT = "BEAM Envelope Withdraw";
+const DEPOSIT_COMMENT = "BEAM Red Envelope Deposit";
 
 class RedEnvelope {
     constructor() {
@@ -11,8 +13,6 @@ class RedEnvelope {
         this.connectionTimeout = null;
         this.socket =  new WebSocket(WS_PATH);
         this.envelopeData = {
-            deposit_clicked: false,
-            deposit_in_progress: false,
             deposit: 0,
             env_address: null,
             wallet_address: null,
@@ -21,7 +21,9 @@ class RedEnvelope {
             paid_reward: 0,
             outgoing_reward: 0,
             available_reward: 0,
-            taken_amount: null
+            taken_amount: null,
+            is_withdraw_active: true,
+            is_catch_active: true
         };
     }
 
@@ -32,15 +34,6 @@ class RedEnvelope {
         this.envelopeData.paid_reward = this.convertGrothsToBeam(params.paid_reward);
         this.envelopeData.outgoing_reward = this.convertGrothsToBeam(params.outgoing_reward);
         this.envelopeData.available_reward = this.convertGrothsToBeam(params.available_reward);
-
-        if (this.envelopeData.incoming === 0 && this.envelopeData.deposit_clicked) {
-            this.envelopeData.deposit_in_progress = false;
-            this.envelopeData.deposit_clicked = false;
-        }
-
-        if (this.envelopeData.incoming > 0 && !this.envelopeData.deposit_clicked) {
-            this.envelopeData.deposit_in_progress = true;
-        }
 
         if (params.taken_amount) {
             this.envelopeData.taken_amount = this.convertGrothsToBeam(params.taken_amount);
@@ -65,21 +58,26 @@ class RedEnvelope {
         Utils.setText('incoming', this.envelopeData.incoming);
         Utils.setText('deposited', this.convertGrothsToBeam(this.envelopeData.deposit));
 
-        if (this.envelopeData.taken_amount !== null && this.envelopeData.taken_amount > 0) {
-            if (this.envelopeData.available_reward === 0) {
+        if (this.envelopeData.available_reward > 0) {
+            this.envelopeData.is_withdraw_active = true;
+            Utils.show('envelope-catched-main');
+            Utils.setText('catched-value', `${this.envelopeData.taken_amount} BEAM`);
+        } else {
+            if (this.envelopeData.outgoing_reward > 0) {
                 Utils.show('withdraw-main');
             } else {
-                Utils.show('envelope-catched-main');
-                Utils.setText('catched-value', `${this.envelopeData.taken_amount} BEAM`);
-            }
-        } else {
-            if (this.envelopeData.paid_reward === 0) {
-                Utils.show('first-deposit-main');
-            } else {
-                if (this.envelopeData.deposit > 0 &&
-                    !this.envelopeData.deposit_in_progress) {
-                    Utils.show('deposited-main');
+                if (this.envelopeData.remaining === 0) {
+                    Utils.show('first-deposit-main');
                 } else {
+                    if (!this.envelopeData.taken_amount) {
+                        Utils.hide('catch-more-after');
+                        this.envelopeData.is_catch_active = true;
+                        Utils.removeClassById('catch-button', 'disabled');
+                    } else {
+                        Utils.show('catch-more-after');
+                        this.envelopeData.is_catch_active = false;
+                        Utils.addClassById('catch-button', 'disabled');
+                    }
                     Utils.show('second-deposit-main');
                 }
             }
@@ -91,6 +89,33 @@ class RedEnvelope {
         const result = bigValue.div(GROTHS_IN_BEAM);
         return parseFloat(result);
     };
+
+    restart = (now) => {
+        if (this.socket) {
+            this.socket.close();
+        }
+
+        if (this.connectionTimeout) {
+            clearTimeout(this.connectionTimeout)
+            this.connectionTimeout = null;
+        }
+
+        Utils.hide('envelope');
+
+        this.socket = null;
+        timeout = setTimeout(this.start, now ? 0 : TIMEOUT_VALUE)   
+    }
+
+    start = () => {
+        Utils.callApi({
+            "jsonrpc": "2.0",
+            "id":      "addr_list",
+            "method":  "addr_list",
+            "params":  {
+                "own": true
+            }
+        })
+    }
     
     reconnect = (now) => {
         if (this.connectionTimeout) {
@@ -117,9 +142,9 @@ class RedEnvelope {
 
         this.socket.onclose = (evt) => {
             if (evt.code == 1000)  {
-                this.reconnect()
+                this.reconnect();
             } else {
-                this.reconnect()
+                this.reconnect();
             }
         }
 
@@ -145,9 +170,11 @@ class RedEnvelope {
     }
 
     applyStylesFromApi = (beamAPI) => {
+        const topColor = [beamAPI.style.appsGradientOffset || -130, "px,"].join('');
+        const mainColor = [beamAPI.style.appsGradientTop || 100, "px,"].join('');
         document.body.style.backgroundImage = `linear-gradient(to bottom, 
-            ${beamAPI.style.background_main_top} -130px, 
-            ${beamAPI.style.background_main} 100px, 
+            ${beamAPI.style.background_main_top} ${topColor}
+            ${beamAPI.style.background_main} ${mainColor}
             ${beamAPI.style.background_main}`;
         document.body.style.color = beamAPI.style.content_main;
         document.querySelectorAll('.popup').forEach(item => {
@@ -172,24 +199,37 @@ Utils.onLoad(async (beamAPI) => {
         ev.preventDefault();
         const bigValue = new Big(Utils.getById('deposit-input').value);
         const value = bigValue.times(GROTHS_IN_BEAM);
-        redEnvelope.envelopeData.deposit_in_progress = true;
-        redEnvelope.envelopeData.deposit_clicked = true;
         redEnvelope.envelopeData.deposit += parseInt(value);
-        beamAPI.sendBEAM("BEAM Envelope", redEnvelope.envelopeData.env_address, parseInt(value), STAKE_FEE);
+        Utils.callApi({
+            "jsonrpc": "2.0",
+            "id":      "tx_send",
+            "method":  "tx_send",
+            "params":  {
+                "value": parseInt(value),
+                "fee": STAKE_FEE,
+                "from": redEnvelope.envelopeData.wallet_address,
+                "address": redEnvelope.envelopeData.env_address,
+                "comment": DEPOSIT_COMMENT,
+            }
+        })
         Utils.hide('deposit-popup');
     })
 
     document.querySelectorAll('.container__main__controls__catch').forEach(item => {
         item.addEventListener('click', event => {
             event.preventDefault();
-            redEnvelope.socket.send(JSON.stringify({
-                jsonrpc: "2.0",
-                id:      "take",
-                method:  "take",
-                params: {
-                    user_addr: redEnvelope.envelopeData.wallet_address
-                }
-            }))
+            if (redEnvelope.envelopeData.is_catch_active) {
+                redEnvelope.envelopeData.is_catch_active = false;
+                Utils.addClassById('catch-button', 'disabled');
+                redEnvelope.socket.send(JSON.stringify({
+                    jsonrpc: "2.0",
+                    id:      "take",
+                    method:  "take",
+                    params: {
+                        user_addr: redEnvelope.envelopeData.wallet_address
+                    }
+                }));
+            }
         })
     });
 
@@ -214,16 +254,20 @@ Utils.onLoad(async (beamAPI) => {
     })
 
     Utils.getById('withdraw-button-popup').addEventListener('click', (ev) => {
-        ev.preventDefault();
-        redEnvelope.socket.send(JSON.stringify({
-            jsonrpc: "2.0",
-            id:      "withdraw",
-            method:  "withdraw",
-            params: {
-                user_addr: redEnvelope.envelopeData.wallet_address
-            }
-        }));
-        Utils.hide('withdraw-popup');
+        if (redEnvelope.envelopeData.is_withdraw_active) {
+            ev.preventDefault();
+            redEnvelope.envelopeData.is_withdraw_active = false;
+            Utils.addClassById('withdraw-button-popup', 'disabled');
+            redEnvelope.socket.send(JSON.stringify({
+                jsonrpc: "2.0",
+                id:      "withdraw",
+                method:  "withdraw",
+                params: {
+                    user_addr: redEnvelope.envelopeData.wallet_address
+                }
+            }));
+            Utils.hide('withdraw-popup');
+        }
     })
 
     Utils.getById('deposit-input').addEventListener('keydown', (event) => {
@@ -251,11 +295,51 @@ Utils.onLoad(async (beamAPI) => {
         }
     })
 
-    beamAPI.permanentAddressGenerated.connect((address) => {
-        redEnvelope.envelopeData.wallet_address = address;
-        redEnvelope.connect();
-    })
-    
     // Go!
-    beamAPI.generatePermanentAddress("BEAM Envelope Withdraw");
+    beamAPI.callWalletApiResult.connect((json) => {
+        let res = undefined;
+        let err = undefined;
+
+        try {
+            res = JSON.parse(json);
+            err = JSON.stringify(res.error);
+        } catch (e) {
+            err = e.toString();
+        } 
+
+        if (err) {
+            redEnvelope.restart();
+            return
+        }
+
+        if (res.id == "addr_list") {
+            for (let idx = 0; idx < res.result.length; ++idx) {
+                let addr = res.result[idx];
+                if (addr.comment == ADDR_COMMENT) {
+                    redEnvelope.envelopeData.wallet_address = addr.address;
+                    break;
+                }
+            }
+
+            if (!redEnvelope.envelopeData.wallet_address) {
+                Utils.callApi({
+                    "jsonrpc": "2.0",
+                    "id":      "create_address",
+                    "method":  "create_address",
+                    "params":  {
+                        "comment": ADDR_COMMENT
+                    }
+                })
+            } else {
+                redEnvelope.connect();
+            }
+        }
+
+        if (res.id == "create_address") {
+            redEnvelope.envelopeData.wallet_address = res.result;
+            redEnvelope.restart();
+        }
+    });
+
+    redEnvelope.start();
 })

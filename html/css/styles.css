@@ -132,6 +132,12 @@ body {
     margin-top: 30px;
 }
 
+.container__main__empty-deposit {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
 .container__main__controls__deposit {
     background-color: #da68f5;
 }
@@ -222,7 +228,7 @@ body {
     outline: none;
 }
 
-.ui-button:hover {
+.ui-button:not(.disabled):hover {
     -moz-box-shadow:0 0 10px #ffffff; 
     -webkit-box-shadow:0 0 10px #ffffff; 
     box-shadow:0 0 10px #ffffff;

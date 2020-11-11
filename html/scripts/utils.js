@@ -23,6 +23,16 @@ export default class Utils {
         return document.getElementById(id);
     }
 
+    static addClassById = (id, className) => {
+        const elem = this.getById(id);
+        elem.classList.add(className);
+    }
+
+    static removeClassById = (id, className) => {
+        const elem = this.getById(id);
+        elem.classList.remove(className);
+    }
+
     static setText = (id, text) => {
         this.getById(id).textContent = text;
     }
@@ -41,6 +51,10 @@ export default class Utils {
         const [r, g, b] = hex.match(/\w\w/g).map(x => parseInt(x, 16));
         return `rgba(${r},${g},${b},${alpha})`;
     };
+
+    static callApi = (obj) => {
+        Utils.BEAM.callWalletApi(JSON.stringify(obj));
+    }
 
     static handleString(next) {
         let result = true;

@@ -37,6 +37,8 @@ class RedEnvelope {
 
         if (params.taken_amount) {
             this.envelopeData.taken_amount = this.convertGrothsToBeam(params.taken_amount);
+        } else {
+            this.envelopeData.taken_amount = null;
         }
 
         this.updateEnvelopeView();
@@ -69,7 +71,7 @@ class RedEnvelope {
                 if (this.envelopeData.remaining === 0) {
                     Utils.show('first-deposit-main');
                 } else {
-                    if (!this.envelopeData.taken_amount) {
+                    if (!this.envelopeData.taken_amount || this.envelopeData.taken_amount === 0) {
                         Utils.hide('catch-more-after');
                         this.envelopeData.is_catch_active = true;
                         Utils.removeClassById('catch-button', 'disabled');
@@ -212,6 +214,7 @@ Utils.onLoad(async (beamAPI) => {
                 "comment": DEPOSIT_COMMENT,
             }
         })
+
         Utils.hide('deposit-popup');
     })
 
@@ -327,6 +330,7 @@ Utils.onLoad(async (beamAPI) => {
                     "id":      "create_address",
                     "method":  "create_address",
                     "params":  {
+                        "expiration": "never",
                         "comment": ADDR_COMMENT
                     }
                 })

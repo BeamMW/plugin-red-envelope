@@ -6,9 +6,9 @@
         <title>BEAM Applications</title>
         <link href="./css/styles.css" rel="stylesheet">
         <link href="./css/font.css" rel="stylesheet">
-        <!-- link rel="stylesheet" href="fonts.css" media="print" onload="this.media='all'" -->
     </head>
     <body>
+        <div id="error"></div><br>
         <div class="container hidden" id="envelope">
             <div class="container__header">
                 <span class="container__header__title">RED ENVELOPE</span>
@@ -72,10 +72,12 @@
             <div class="container__main hidden" id="second-deposit-main">
                 <img class="container__main__icon" src="./icons/welcome-envelope.svg"/>
                 <div class="container__main__empty-deposit main-text">
-                    <div>Welcome back to Red Envelope!</div>
-                    <div>Time to play and catch some BEAM..</div>
+                    <div>Welcome to Red Envelope!</div>
+                    <div>Time to play and catch some BEAM.</div>
+                    <div class="catch-more hidden" id="catch-more-after">
+                        You can catch more BEAM after someone make deposit.
+                    </div>
                 </div>
-
                 <div class="container__main__controls">
                     <button class="container__main__controls__deposit ui-button">
                         <span class="ui-button__inner-wrapper">
@@ -129,7 +131,7 @@
                 <img class="container__main__icon" src="./icons/envelope-withdraw-succesfull.svg"/>
                 <div class="container__main__empty-deposit main-text">
                     <div>Withdraw succesfull!</div>
-                    <div>You can catch more BEAM after someone make deposit.</div>
+                    <div>You can catch more BEAM after someone makes deposit.</div>
                 </div>
 
                 <div class="container__main__controls">
@@ -149,7 +151,7 @@
                 <img class="container__main__icon" src="./icons/envelope-deposit-succesfull.svg"/>
                 <div class="container__main__empty-deposit main-text">
                     <div>Congratulations!</div>
-                    <div>You catched <span class="catched-beam" id="catched-value"></span>!</div>
+                    <div>You caught <span class="catched-beam" id="catched-value"></span>!</div>
                     <div class="catch-more">You can catch more BEAM after someone make deposit.</div>
                 </div>
 

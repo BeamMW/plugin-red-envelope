@@ -105,7 +105,7 @@ class RedEnvelope {
         Utils.hide('envelope');
 
         this.socket = null;
-        timeout = setTimeout(this.start, now ? 0 : TIMEOUT_VALUE)   
+        this.connectionTimeout = setTimeout(this.start, now ? 0 : TIMEOUT_VALUE)   
     }
 
     start = () => {

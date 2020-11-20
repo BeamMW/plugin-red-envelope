@@ -94,11 +94,11 @@ func (env *Envelope) take(uid UID) (uint64, error) {
 	const MinTake uint64 = 100000
 	var takeAmount uint64
 
-	if env.Remaining < MinTake {
-		takeAmount = env.Remaining
+	if env.Remaining / 5 <= MinTake {
+		takeAmount = minU64(env.Remaining, MinTake)
 	} else {
-		var MaxTake = minU64(env.Remaining, 500000000)
-		takeAmount = uint64(rand.Intn(int(MaxTake-MinTake))) + MinTake
+		var MaxTake = minU64(env.Remaining / 5, 500000000)
+		takeAmount = uint64(rand.Intn(int(MaxTake - MinTake))) + MinTake
 	}
 
 	env.Remaining -= takeAmount

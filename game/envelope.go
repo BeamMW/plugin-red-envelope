@@ -8,7 +8,6 @@ import (
 	"github.com/dgraph-io/badger/v2"
 	"log"
 	"math/rand"
-	"time"
 )
 
 type TakesList map[UID]uint64
@@ -85,18 +84,21 @@ func (env *Envelope) take(uid UID) (uint64, error) {
 		return 0, fmt.Errorf("there is nothing to take, balance is 0")
 	}
 
+	var minU64 = func (a, b uint64) uint64 {
+		if a < b {
+			return a
+		}
+		return b
+	}
+
 	const MinTake uint64 = 100000
 	var takeAmount uint64
 
 	if env.Remaining < MinTake {
 		takeAmount = env.Remaining
 	} else {
-		rand.Seed(time.Now().UnixNano())
-		if len(env.LastTakes) < 5 {
-			takeAmount = uint64(rand.Intn(int(env.Remaining/2-MinTake))) + MinTake
-		} else {
-			takeAmount = uint64(rand.Intn(int(env.Remaining-MinTake))) + MinTake
-		}
+		var MaxTake = minU64(env.Remaining, 500000000)
+		takeAmount = uint64(rand.Intn(int(MaxTake-MinTake))) + MinTake
 	}
 
 	env.Remaining -= takeAmount

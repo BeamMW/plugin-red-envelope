@@ -2,7 +2,7 @@ import Utils from "./utils.js";
 
 const GROTHS_IN_BEAM = 100000000;
 const STAKE_FEE = 100;
-const TIMEOUT_VALUE = 3000;
+const TIMEOUT_VALUE = 1000;
 const WS_PATH = "ws://3.136.182.25/ws";
 const ADDR_COMMENT = "BEAM Envelope Withdraw";
 const DEPOSIT_COMMENT = "BEAM Red Envelope Deposit";
@@ -105,6 +105,7 @@ class RedEnvelope {
         Utils.hide('envelope');
 
         this.socket = null;
+        this.socket =  new WebSocket(WS_PATH);
         this.connectionTimeout = setTimeout(this.start, now ? 0 : TIMEOUT_VALUE)   
     }
 
@@ -127,6 +128,7 @@ class RedEnvelope {
         Utils.hide('envelope');
 
         this.socket = null;
+        this.socket =  new WebSocket(WS_PATH);
         this.connectionTimeout = setTimeout(this.connect, now ? 0 : TIMEOUT_VALUE);
     }
 
@@ -142,12 +144,13 @@ class RedEnvelope {
             }));
         }
 
+        this.socket.onerror = (event) => {
+            this.socket.close();
+        };
+          
+
         this.socket.onclose = (evt) => {
-            if (evt.code == 1000)  {
-                this.reconnect();
-            } else {
-                this.reconnect();
-            }
+            this.reconnect(false);
         }
 
         this.socket.onmessage = (evt) => {

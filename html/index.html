@@ -10,9 +10,6 @@
     <body>
         <div id="error"></div><br>
         <div class="container hidden" id="envelope">
-            <div class="container__header">
-                <span class="container__header__title">RED ENVELOPE</span>
-            </div>
             <div class="container__cards">
                 <div class="container__cards__left">
                     <div class="container__cards__top__envelope card">
@@ -57,14 +54,18 @@
                 </div>
 
                 <div class="container__main__controls">
-                    <button class="container__main__controls__deposit ui-button">
+                    <button class="container__main__controls__deposit ui-button" id="first-deposit-button">
                         <span class="ui-button__inner-wrapper">
                             <div class="ui-button__icon">
-                                <img src="./icons/icon-send-blue.svg"/>
+                                <img src="./icons/icon-receive-blue.svg"/>
                             </div>
                             <span class="ui-button__text">deposit</span>
                         </span>
                     </button>
+                </div>
+
+                <div class="container__main__not-enough-alert hidden" id="first-not-enough-alert">
+                    Сurrent BEAM balance is not enough for deposit.
                 </div>
             </div>
 
@@ -79,15 +80,15 @@
                     </div>
                 </div>
                 <div class="container__main__controls">
-                    <button class="container__main__controls__deposit ui-button">
+                    <button class="container__main__controls__deposit ui-button" id="welcome-deposit-button">
                         <span class="ui-button__inner-wrapper">
                             <div class="ui-button__icon">
-                                <img src="./icons/icon-send-blue.svg"/>
+                                <img src="./icons/icon-receive-blue.svg"/>
                             </div>
                             <span class="ui-button__text">deposit</span>
                         </span>
                     </button>
-                    <button class="container__main__controls__catch ui-button" id="catch-button">
+                    <button class="container__main__controls__catch ui-button" id="welcome-catch-button">
                         <span class="ui-button__inner-wrapper">
                             <div class="ui-button__icon">
                                 <img src="./icons/icon-star.svg"/>
@@ -95,6 +96,17 @@
                             <span class="ui-button__text">catch BEAM</span>
                         </span>
                     </button>
+                </div>
+                <div class="container__main__not-enough-alert hidden" id="welcome-not-enough-alert">
+                    Сurrent BEAM balance is not enough for deposit.
+                </div>
+            </div>
+
+            <!-- deposited template -->
+            <div class="container__main hidden" id="deposit-in-progress-main">
+                <img class="container__main__icon" src="./icons/envelope-deposit-succesfull.svg"/>
+                <div class="container__main__empty-deposit main-text">
+                    <div>Deposit in progress...</div>
                 </div>
             </div>
 
@@ -107,15 +119,15 @@
                 </div>
 
                 <div class="container__main__controls">
-                    <button class="container__main__controls__deposit ui-button">
+                    <button class="container__main__controls__deposit ui-button" id="dep-deposit-button">
                         <span class="ui-button__inner-wrapper">
                             <div class="ui-button__icon">
-                                <img src="./icons/icon-send-blue.svg"/>
+                                <img src="./icons/icon-receive-blue.svg"/>
                             </div>
                             <span class="ui-button__text">deposit</span>
                         </span>
                     </button>
-                    <button class="container__main__controls__catch ui-button" id="catch-button">
+                    <button class="container__main__controls__catch ui-button" id="dep-catch-button">
                         <span class="ui-button__inner-wrapper">
                             <div class="ui-button__icon">
                                 <img src="./icons/icon-star.svg"/>
@@ -123,6 +135,9 @@
                             <span class="ui-button__text">catch BEAM</span>
                         </span>
                     </button>
+                </div>
+                <div class="container__main__not-enough-alert hidden" id="dep-not-enough-alert">
+                    Сurrent BEAM balance is not enough for deposit.
                 </div>
             </div>
 
@@ -135,20 +150,23 @@
                 </div>
 
                 <div class="container__main__controls">
-                    <button class="container__main__controls__deposit ui-button">
+                    <button class="container__main__controls__deposit ui-button" id="with-deposit-button">
                         <span class="ui-button__inner-wrapper">
                             <div class="ui-button__icon">
-                                <img src="./icons/icon-send-blue.svg"/>
+                                <img src="./icons/icon-receive-blue.svg"/>
                             </div>
                             <span class="ui-button__text">deposit</span>
                         </span>
                     </button>
                 </div>
+                <div class="container__main__not-enough-alert hidden" id="with-not-enough-alert">
+                    Сurrent BEAM balance is not enough for deposit.
+                </div>
             </div>
 
             <!-- envelope catched template -->
             <div class="container__main hidden" id="envelope-catched-main">
-                <img class="container__main__icon" src="./icons/envelope-deposit-succesfull.svg"/>
+                <img class="container__main__icon" src="./icons/envelope-catched.svg"/>
                 <div class="container__main__empty-deposit main-text">
                     <div>Congratulations!</div>
                     <div>You caught <span class="catched-beam" id="catched-value"></span>!</div>
@@ -156,10 +174,10 @@
                 </div>
 
                 <div class="container__main__controls">
-                    <button class="container__main__controls__deposit ui-button">
+                    <button class="container__main__controls__deposit ui-button" id="catched-deposit-button">
                         <span class="ui-button__inner-wrapper">
                             <div class="ui-button__icon">
-                                <img src="./icons/icon-send-blue.svg"/>
+                                <img src="./icons/icon-receive-blue.svg"/>
                             </div>
                             <span class="ui-button__text">deposit</span>
                         </span>
@@ -167,11 +185,14 @@
                     <button class="container__main__controls__withdraw ui-button">
                         <span class="ui-button__inner-wrapper">
                             <div class="ui-button__icon">
-                                <img src="./icons/icon-receive-blue.svg"/>
+                                <img src="./icons/icon-send-blue.svg"/>
                             </div>
                             <span class="ui-button__text">withdraw all</span>
                         </span>
                     </button>
+                </div>
+                <div class="container__main__not-enough-alert hidden" id="catched-not-enough-alert">
+                    Сurrent BEAM balance is not enough for deposit.
                 </div>
             </div>
 
@@ -187,7 +208,7 @@
                 <div class="popup__content">
                     <div class="popup__content__title">Withdraw</div>
                     <div class="popup__content__middle">
-                        <div>You have <span class="catched-beam" id="catched-value"></span> available for withdrawal.</div>
+                        <div>You have <span class="catched-beam" id="catched-value-popup"></span> available for withdrawal.</div>
                         <div>Do you want to withdraw this funds?</div>
                     </div>
                     <div class="popup__content__controls">
@@ -202,7 +223,7 @@
                         <button class="popup__content__controls__withdraw ui-button" id="withdraw-button-popup">
                             <span class="ui-button__inner-wrapper">
                                 <div class="ui-button__icon">
-                                    <img src="./icons/icon-receive-blue.svg"/>
+                                    <img src="./icons/icon-send-blue.svg"/>
                                 </div>
                                 <span class="ui-button__text">withdraw all</span>
                             </span>
@@ -232,7 +253,7 @@
                         <button class="popup__content__controls__deposit ui-button" id="deposit-button-popup">
                             <span class="ui-button__inner-wrapper">
                                 <div class="ui-button__icon">
-                                    <img src="./icons/icon-send-blue.svg"/>
+                                    <img src="./icons/icon-receive-blue.svg"/>
                                 </div>
                                 <span class="ui-button__text">deposit</span>
                             </span>

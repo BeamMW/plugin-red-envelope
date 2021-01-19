@@ -23,7 +23,11 @@ class RedEnvelope {
             available_reward: 0,
             taken_amount: null,
             is_withdraw_active: true,
-            is_catch_active: true
+            is_catch_active: true,
+            is_deposit_active: true,
+            wallet_status_available: 0,
+            is_deposit_in_progress: false,
+            is_deposit_finished: null
         };
     }
 
@@ -50,6 +54,7 @@ class RedEnvelope {
         Utils.hide('deposited-main');
         Utils.hide('withdraw-main');
         Utils.hide('second-deposit-main');
+        Utils.hide('deposit-in-progress-main');
     }
 
     updateEnvelopeView = () => {
@@ -60,36 +65,63 @@ class RedEnvelope {
         Utils.setText('incoming', this.envelopeData.incoming);
         Utils.setText('deposited', this.convertGrothsToBeam(this.envelopeData.deposit));
 
-        if (this.envelopeData.available_reward > 0) {
-            this.envelopeData.is_withdraw_active = true;
-            Utils.show('envelope-catched-main');
-            Utils.setText('catched-value', `${this.envelopeData.taken_amount} BEAM`);
-        } else {
-            if (this.envelopeData.outgoing_reward > 0) {
-                Utils.show('withdraw-main');
+
+        if (this.envelopeData.is_deposit_in_progress && !this.envelopeData.is_deposit_finished) {
+            Utils.show('deposit-in-progress-main');
+        } else if (!this.envelopeData.is_deposit_in_progress && this.envelopeData.is_deposit_finished) {
+            Utils.show('deposited-main');
+        } else if (!this.envelopeData.is_deposit_in_progress && this.envelopeData.is_deposit_finished == null) {
+            if (this.envelopeData.available_reward > 0) {
+                this.envelopeData.is_withdraw_active = true;
+                Utils.show('envelope-catched-main');
+                this.notEnoughAlertUpdate('catched-not-enough-alert', 'catched-deposit-button');
+                Utils.setText('catched-value', `${this.envelopeData.available_reward} BEAM`);
             } else {
-                if (this.envelopeData.remaining === 0) {
-                    Utils.show('first-deposit-main');
+                Utils.removeClassById('withdraw-button-popup', 'disabled');
+                if (this.envelopeData.outgoing_reward > 0) {
+                    this.notEnoughAlertUpdate('with-not-enough-alert', 'with-deposit-button');
+                    Utils.hide('withdraw-popup');
+                    Utils.show('withdraw-main');
                 } else {
-                    if (!this.envelopeData.taken_amount || this.envelopeData.taken_amount === 0) {
-                        Utils.hide('catch-more-after');
-                        this.envelopeData.is_catch_active = true;
-                        Utils.removeClassById('catch-button', 'disabled');
+                    if (this.envelopeData.remaining === 0) {
+                        Utils.show('first-deposit-main');
+                        this.notEnoughAlertUpdate('first-not-enough-alert', 'first-deposit-button');
                     } else {
-                        Utils.show('catch-more-after');
-                        this.envelopeData.is_catch_active = false;
-                        Utils.addClassById('catch-button', 'disabled');
+                        if (!this.envelopeData.taken_amount || this.envelopeData.taken_amount === 0) {
+                            Utils.hide('catch-more-after');
+                            this.envelopeData.is_catch_active = true;
+                            Utils.removeClassById('welcome-catch-button', 'disabled');
+                            Utils.removeClassById('dep-catch-button', 'disabled');
+                        } else {
+                            Utils.show('catch-more-after');
+                            this.envelopeData.is_catch_active = false;
+                            Utils.addClassById('welcome-catch-button', 'disabled');
+                            Utils.addClassById('dep-catch-button', 'disabled');
+                        }
+                        Utils.show('second-deposit-main');
+                        this.notEnoughAlertUpdate('welcome-not-enough-alert', 'welcome-deposit-button');
                     }
-                    Utils.show('second-deposit-main');
                 }
             }
+        }
+    }
+
+    notEnoughAlertUpdate = (id, buttonId) => {
+        if (this.envelopeData.wallet_status_available > 0) {
+            Utils.hide(id);
+            this.envelopeData.is_deposit_active = true;
+            Utils.removeClassById(buttonId, 'disabled');
+        } else {
+            Utils.show(id);
+            this.envelopeData.is_deposit_active = false;
+            Utils.addClassById(buttonId, 'disabled');
         }
     }
     
     convertGrothsToBeam = (value) => {
         const bigValue = new Big(value);
         const result = bigValue.div(GROTHS_IN_BEAM);
-        return parseFloat(result);
+        return result.toFixed();
     };
 
     restart = (now) => {
@@ -162,6 +194,8 @@ class RedEnvelope {
             }
 
             if (msg.method == "game-status") {
+                this.getWalletStatus();
+                this.getTxStatus();
                 this.initEnvelopeData(msg.params);
 
                 const currentDate = new Date();
@@ -174,6 +208,22 @@ class RedEnvelope {
         }
     }
 
+    getWalletStatus = () => {
+        Utils.callApi({
+            "jsonrpc":"2.0", 
+            "id": "wallet_status",
+            "method":"wallet_status"
+        })
+    }
+
+    getTxStatus = () => {
+        Utils.callApi({
+            "jsonrpc":"2.0", 
+            "id": "tx_list",
+            "method":"tx_list"
+        })
+    }
+
     applyStylesFromApi = (beamAPI) => {
         const topColor = [beamAPI.style.appsGradientOffset || -130, "px,"].join('');
         const mainColor = [beamAPI.style.appsGradientTop || 100, "px,"].join('');
@@ -183,7 +233,10 @@ class RedEnvelope {
             ${beamAPI.style.background_main}`;
         document.body.style.color = beamAPI.style.content_main;
         document.querySelectorAll('.popup').forEach(item => {
-            item.style.backgroundColor = Utils.hex2rgba(beamAPI.style.background_main, 0.6);
+            item.style.backgroundImage = `linear-gradient(to bottom, 
+                ${Utils.hex2rgba(beamAPI.style.background_main_top, 0.6)} ${topColor}
+                ${Utils.hex2rgba(beamAPI.style.background_main, 0.6)} ${mainColor}
+                ${Utils.hex2rgba(beamAPI.style.background_main, 0.6)}`;
         });
         document.querySelectorAll('.popup__content').forEach(item => {
             item.style.backgroundColor = Utils.hex2rgba(beamAPI.style.background_popup, 1);
@@ -204,6 +257,8 @@ Utils.onLoad(async (beamAPI) => {
         ev.preventDefault();
         const bigValue = new Big(Utils.getById('deposit-input').value);
         const value = bigValue.times(GROTHS_IN_BEAM);
+        redEnvelope.envelopeData.is_deposit_in_progress = true;
+        redEnvelope.envelopeData.is_deposit_finished = false;
         redEnvelope.envelopeData.deposit += parseInt(value);
         Utils.callApi({
             "jsonrpc": "2.0",
@@ -225,8 +280,11 @@ Utils.onLoad(async (beamAPI) => {
         item.addEventListener('click', event => {
             event.preventDefault();
             if (redEnvelope.envelopeData.is_catch_active) {
+                redEnvelope.envelopeData.is_deposit_finished = null;
                 redEnvelope.envelopeData.is_catch_active = false;
-                Utils.addClassById('catch-button', 'disabled');
+                Utils.addClassById('welcome-catch-button', 'disabled');
+                Utils.addClassById('dep-catch-button', 'disabled');
+                
                 redEnvelope.socket.send(JSON.stringify({
                     jsonrpc: "2.0",
                     id:      "take",
@@ -242,12 +300,15 @@ Utils.onLoad(async (beamAPI) => {
     document.querySelectorAll('.container__main__controls__withdraw').forEach(item => {
         item.addEventListener('click', event => {
             Utils.show('withdraw-popup');
+            Utils.setText('catched-value-popup', `${redEnvelope.envelopeData.available_reward} BEAM`);
         })
     });
 
     document.querySelectorAll('.container__main__controls__deposit').forEach(item => {
         item.addEventListener('click', event => {
-            Utils.show('deposit-popup');
+            if (redEnvelope.envelopeData.is_deposit_active) {
+                Utils.show('deposit-popup');
+            }
         })
     });
 
@@ -318,7 +379,7 @@ Utils.onLoad(async (beamAPI) => {
             return
         }
 
-        if (res.id == "addr_list") {
+        if (res.id === "addr_list") {
             for (let idx = 0; idx < res.result.length; ++idx) {
                 let addr = res.result[idx];
                 if (addr.comment == ADDR_COMMENT) {
@@ -342,11 +403,34 @@ Utils.onLoad(async (beamAPI) => {
             }
         }
 
-        if (res.id == "create_address") {
+        if (res.id === "create_address") {
             redEnvelope.envelopeData.wallet_address = res.result;
             redEnvelope.restart();
         }
+
+        if (res.id === "wallet_status") {
+            redEnvelope.envelopeData.wallet_status_available = res.result.available;
+        }
+
+        if (res.id === "tx_list") {
+            const transacions = res.result;
+            const depositTrasaction = transacions.find((item) => {
+                return item.comment === "BEAM Red Envelope Deposit" && item.status === 5;
+            })
+
+            if (depositTrasaction !== undefined) {
+                redEnvelope.envelopeData.is_deposit_in_progress = true;
+                redEnvelope.envelopeData.is_deposit_finished = false;
+            } else {
+                if (redEnvelope.envelopeData.is_deposit_in_progress) {
+                    redEnvelope.envelopeData.is_deposit_in_progress = false;
+                    redEnvelope.envelopeData.is_deposit_finished = true;
+                }
+            }
+        }
     });
 
+    redEnvelope.getTxStatus();
+    redEnvelope.getWalletStatus();
     redEnvelope.start();
 })

@@ -14,25 +14,6 @@ body {
     flex-direction: column;
 }
 
-.container__header {
-    display: flex;
-    flex-direction: row;
-    height: 46px;
-}
-
-.container__header__title {
-    width: 100%;
-    color: #ffffff;
-    text-align: center;
-    font-size: 14px;
-    font-weight: bold;
-    font-stretch: normal;
-    font-style: normal;
-    line-height: normal;
-    letter-spacing: 4px;
-    text-align: center;
-}
-
 .container__cards {
     display: flex;
     flex-direction: row;
@@ -150,6 +131,18 @@ body {
 .container__main__controls__withdraw {
     background-color: #0bccf7;
     margin-left: 20px;
+}
+
+.container__main__not-enough-alert {
+    margin: 20px auto 0 auto;
+    font-size: 14px;
+    font-weight: normal;
+    font-stretch: normal;
+    font-style: italic;
+    line-height: normal;
+    letter-spacing: normal;
+    text-align: center;
+    color: #8196a4;
 }
 
 .popup__content__controls__withdraw {
@@ -275,10 +268,9 @@ body {
 
 /* popup starts */
 
-.popup{
+.popup {
     width: 100%;
     height: 100%;
-    background-color: rgb(4, 37, 72, 0.6);
     overflow: hidden;
     position: fixed;
     top: 0px;

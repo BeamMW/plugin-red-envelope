@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 30 30">
+    <defs>
+        <radialGradient id="ss0ln4blea" cx="50%" cy="50%" r="50%" fx="50%" fy="50%" gradientTransform="matrix(0 1 -.99 0 .995 0)">
+            <stop offset="0%" stop-color="#008471"/>
+            <stop offset="100%" stop-color="#103051"/>
+        </radialGradient>
+    </defs>
+    <g fill="none" fill-rule="evenodd">
+        <g>
+            <g>
+                <g>
+                    <g>
+                        <path fill="#F72C56" fill-rule="nonzero" d="M29.653 11.38l.13-.166.217.165v17.587c-.002.57-.464 1.032-1.034 1.034H1.034C.464 29.998.002 29.536 0 28.966V11.379l.217-.165.13.165h29.306z" transform="translate(-125 -150) translate(90 117) translate(20 20) translate(15 13)"/>
+                        <path fill="#B9072C" fill-rule="nonzero" d="M29.783 11.214l-.13.165-14.136 10.862h-1.034L.347 11.38l-.13-.165L5.172 7.36 11.99 2.07 14.374.217c.367-.29.885-.29 1.252 0L18.01 2.07l6.818 5.291 4.955 3.854z" transform="translate(-125 -150) translate(90 117) translate(20 20) translate(15 13)"/>
+                        <g transform="translate(-125 -150) translate(90 117) translate(20 20) translate(15 13) translate(8.304 8.036)">
+                            <ellipse cx="6.751" cy="6.683" fill="url(#ss0ln4blea)" stroke="#00F6D2" stroke-width="1.5" rx="7.493" ry="7.426"/>
+                            <g>
+                                <g>
+                                    <path fill="#FFF" d="M4.215 0L8.43 7.232H4.215V6.024h2.15l-2.15-3.75V0z" transform="translate(2.362 2.492) translate(.193)"/>
+                                    <path fill="#FFF" d="M0 0l4.215 7.232H0V6.024h2.15L0 2.275V0z" transform="translate(2.362 2.492) translate(.193) matrix(-1 0 0 1 4.215 0)"/>
+                                    <path fill="#FFF" d="M4.215 3.205L4.215 5.584 2.881 5.587z" transform="translate(2.362 2.492) translate(.193)"/>
+                                    <path fill="#FFF" d="M5.548 3.205L5.548 5.584 4.215 5.587z" transform="translate(2.362 2.492) translate(.193) matrix(-1 0 0 1 9.762 0)"/>
+                                    <path stroke="#FFF" d="M4.214 1.012l3.351 5.714H.872l3.342-5.714z" transform="translate(2.362 2.492) translate(.193)"/>
+                                    <path fill="#FFF" d="M4.218 3.202L2.899 5.583 5.561 5.594z" transform="translate(2.362 2.492) translate(.193)"/>
+                                </g>
+                                <path fill="#FFF" d="M0 4.65L4.496 2.714 4.496 4.939 0 4.849z" transform="translate(2.362 2.492) matrix(-1 0 0 1 4.496 0)"/>
+                                <path fill="#FFF" d="M4.496 4.65L8.991 2.714 8.991 4.939 4.496 4.849z" transform="translate(2.362 2.492)"/>
+                            </g>
+                        </g>
+                        <path fill="#EA3E62" d="M0.347 11.379L14.483 22.241 15.517 22.241 29.653 11.379 29.783 11.214 30 11.379 30 28.966 0 28.966 0 11.379 0.217 11.214z" transform="translate(-125 -150) translate(90 117) translate(20 20) translate(15 13)"/>
+                        <path fill="#D0143B" fill-rule="nonzero" d="M29.798 29.576c-.193.267-.503.425-.832.424H1.034c-.33.001-.64-.157-.832-.424l11.85-9.202 2.322-1.805c.367-.29.885-.29 1.252 0l2.322 1.805 11.85 9.202z" transform="translate(-125 -150) translate(90 117) translate(20 20) translate(15 13)"/>
+                    </g>
+                </g>
+            </g>
+        </g>
+    </g>
+</svg>

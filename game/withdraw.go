@@ -1,7 +1,7 @@
 package game
 
 import (
-	"github.com/BeamMW/red-envelope/wallet"
+	"github.com/BeamMW/plugin-red-envelope/wallet"
 	"log"
 )
 

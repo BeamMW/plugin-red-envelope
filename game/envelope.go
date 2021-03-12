@@ -3,8 +3,8 @@ package game
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/BeamMW/red-envelope/database"
-	"github.com/BeamMW/red-envelope/wallet"
+	"github.com/BeamMW/plugin-red-envelope/database"
+	"github.com/BeamMW/plugin-red-envelope/wallet"
 	"github.com/dgraph-io/badger/v2"
 	"log"
 	"math/rand"

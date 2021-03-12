@@ -3,7 +3,7 @@ package wallet
 import (
 	"bytes"
 	"encoding/json"
-	"github.com/BeamMW/red-envelope/jsonrpc"
+	"github.com/BeamMW/plugin-red-envelope/jsonrpc"
 	"io/ioutil"
 	"net/http"
 )

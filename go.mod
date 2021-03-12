@@ -1,4 +1,4 @@
-module github.com/BeamMW/red-envelope
+module github.com/BeamMW/plugin-red-envelope
 
 go 1.14
 

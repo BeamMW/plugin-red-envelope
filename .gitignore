@@ -1,7 +1,8 @@
 .idea
-database
 red-envelope
 
 html-trivial/fonts/
 
 db-files/
+
+plugin-red-envelope

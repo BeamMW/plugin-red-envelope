@@ -3,7 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/BeamMW/red-envelope/jsonrpc"
+	"github.com/BeamMW/plugin-red-envelope/jsonrpc"
 	"github.com/chapati/melody"
 )
 

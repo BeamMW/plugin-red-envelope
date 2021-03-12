@@ -2,8 +2,8 @@ package main
 
 import (
 	"flag"
-	"github.com/BeamMW/red-envelope/database"
-	"github.com/BeamMW/red-envelope/game"
+	"github.com/BeamMW/plugin-red-envelope/database"
+	"github.com/BeamMW/plugin-red-envelope/game"
 	"github.com/chapati/melody"
 	"log"
 	"net/http"
@@ -69,7 +69,11 @@ func main() {
 		log.Printf("Serving static files from %s at %s", config.StaticFiles, config.StaticEndpoint)
 		fs := http.FileServer(http.Dir(config.StaticFiles))
 		strip := http.StripPrefix(config.StaticEndpoint, fs)
-		http.Handle(config.StaticEndpoint, strip)
+
+		http.HandleFunc(config.StaticEndpoint, func (w http.ResponseWriter, r *http.Request) {
+			w.Header().Add("Cache-Control", "must-revalidate")
+			strip.ServeHTTP(w, r)
+		})
 	}
 
 	//

@@ -2,7 +2,7 @@ package main
 
 import (
 	"encoding/json"
-	"github.com/BeamMW/red-envelope/game"
+	"github.com/BeamMW/plugin-red-envelope/game"
 	"github.com/chapati/melody"
 )
 

@@ -1,8 +1,8 @@
 package main
 
 import (
-	"github.com/BeamMW/red-envelope/game"
-	"github.com/BeamMW/red-envelope/jsonrpc"
+	"github.com/BeamMW/plugin-red-envelope/game"
+	"github.com/BeamMW/plugin-red-envelope/jsonrpc"
 	"github.com/chapati/melody"
 	"log"
 )

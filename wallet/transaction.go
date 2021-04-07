@@ -6,7 +6,7 @@ import (
 )
 
 const (
-	DefaultFee uint64 = 100
+	DefaultFee uint64 = 100000
 )
 
 type TxStatus uint32

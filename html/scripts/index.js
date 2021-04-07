@@ -11,7 +11,7 @@ class RedEnvelope {
     constructor() {
         this.errTimeout = null;
         this.connectionTimeout = null;
-        this.socket =  new WebSocket(WS_PATH);
+        this.socket = null;
         this.envelopeData = {
             deposit: 0,
             env_address: null,
@@ -119,11 +119,16 @@ class RedEnvelope {
     }
 
     setError = (text) => {
-        Utils.setText('error', text)
-        if (errTimeout) {
-            clearTimeout(errTimeout)   
+        if (text) {
+            if (text[text.length-1] !== '.') text += '.'
+            text += " Restarting..."
         }
-        errTimeout = setTimeout(() => this.setError(""), 3000)
+
+        Utils.setText('error', text)
+        if (this.errTimeout) {
+            clearTimeout(this.errTimeout)
+        }
+        this.errTimeout = setTimeout(() => this.setError(""), 3000)
     }
     
     convertGrothsToBeam = (value) => {
@@ -144,8 +149,11 @@ class RedEnvelope {
 
         Utils.hide('envelope');
 
-        this.socket = null;
-        this.socket =  new WebSocket(WS_PATH);
+        if (this.socket) {
+            this.socket.close()
+            this.socket = null
+        }
+
         this.connectionTimeout = setTimeout(this.start, now ? 0 : TIMEOUT_VALUE)   
     }
 
@@ -167,12 +175,16 @@ class RedEnvelope {
         }
         Utils.hide('envelope');
 
-        this.socket = null;
-        this.socket =  new WebSocket(WS_PATH);
+        if (this.socket) {
+            this.socket.close()
+            this.socket = null
+        }
+
         this.connectionTimeout = setTimeout(this.connect, now ? 0 : TIMEOUT_VALUE);
     }
 
     connect = () => {
+        this.socket = new WebSocket(WS_PATH)
         this.socket.onopen = (evt) => {
             this.socket.send(JSON.stringify({
                 jsonrpc: "2.0",
@@ -187,9 +199,8 @@ class RedEnvelope {
         this.socket.onerror = (event) => {
             this.socket.close();
         };
-          
 
-        this.socket.onclose = function(evt) {
+        this.socket.onclose = (evt) => {
             if (evt.code == 1000)  {
                 this.setError('Connection closed');
                 this.reconnect(false);
@@ -218,6 +229,8 @@ class RedEnvelope {
                 Utils.setText('reloaded-at', 
                     `(last updated on ${currentDate.toLocaleDateString("en-US", options)} at 
                     ${currentDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })})`);
+
+                this.setError("")
                 Utils.show('envelope')
             }
         }

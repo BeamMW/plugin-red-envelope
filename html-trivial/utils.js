@@ -20,6 +20,6 @@ export default class Utils {
     }
 
     static callApi(obj) {
-        Utils.BEAM.callWalletApi(JSON.stringify(obj))
+        Utils.BEAM.api.callWalletApi(JSON.stringify(obj))
     }
 }

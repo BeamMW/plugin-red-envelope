@@ -22,6 +22,7 @@ type ResponseHeader struct {
 	Jsonrpc string           `json:"jsonrpc"`
 	Id      *json.RawMessage `json:"id"`
 	Result  *json.RawMessage `json:"result"`
+	Error   *json.RawMessage `json:"error"`
 }
 
 type MessageHeader struct {

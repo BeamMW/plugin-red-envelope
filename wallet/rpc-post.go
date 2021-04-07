@@ -3,6 +3,7 @@ package wallet
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"github.com/BeamMW/plugin-red-envelope/jsonrpc"
 	"io/ioutil"
 	"net/http"
@@ -45,6 +46,11 @@ func (api *API) rpcPost(method string, params interface{}) (res *json.RawMessage
 
 	var rpcr jsonrpc.ResponseHeader
 	if err = json.Unmarshal(body, &rpcr); err != nil {
+		return
+	}
+
+	if rpcr.Error != nil {
+		err = fmt.Errorf("jsonrpc error: %s", string(*rpcr.Error))
 		return
 	}
 

@@ -9,6 +9,14 @@ body {
 
 /* plugin area start  */
 
+#error {
+    margin-top: 0.7em;
+    font-size: 14px;
+    color: red;
+    display: flex;
+    margin: 0 auto;
+}
+
 .container {
     display: flex;
     flex-direction: column;

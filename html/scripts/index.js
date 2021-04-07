@@ -363,7 +363,7 @@ Utils.onLoad(async (beamAPI) => {
     })
 
     // Go!
-    beamAPI.callWalletApiResult.connect((json) => {
+    beamAPI.api.callWalletApiResult.connect((json) => {
         let res = undefined;
         let err = undefined;
 

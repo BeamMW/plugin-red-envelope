@@ -442,8 +442,9 @@ Utils.onLoad(async (beamAPI) => {
 
         if (res.id === "tx_list") {
             const transacions = res.result;
+
             const depositTrasaction = transacions.find((item) => {
-                return item.comment === "BEAM Red Envelope Deposit" && item.status === 5;
+                return item.comment === DEPOSIT_COMMENT && item.status === 5;
             })
 
             if (depositTrasaction !== undefined) {

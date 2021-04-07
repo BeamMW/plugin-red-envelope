@@ -1,7 +1,7 @@
 import Utils from "./utils.js";
 
 const GROTHS_IN_BEAM = 100000000;
-const STAKE_FEE = 100;
+const STAKE_FEE = 100000;
 const TIMEOUT_VALUE = 1000;
 const WS_PATH = "ws://3.136.182.25/ws";
 const ADDR_COMMENT = "BEAM Envelope Withdraw";
@@ -117,6 +117,14 @@ class RedEnvelope {
             Utils.addClassById(buttonId, 'disabled');
         }
     }
+
+    setError = (text) => {
+        Utils.setText('error', text)
+        if (errTimeout) {
+            clearTimeout(errTimeout)   
+        }
+        errTimeout = setTimeout(() => this.setError(""), 3000)
+    }
     
     convertGrothsToBeam = (value) => {
         const bigValue = new Big(value);
@@ -181,15 +189,22 @@ class RedEnvelope {
         };
           
 
-        this.socket.onclose = (evt) => {
-            this.reconnect(false);
+        this.socket.onclose = function(evt) {
+            if (evt.code == 1000)  {
+                this.setError('Connection closed');
+                this.reconnect(false);
+            } else {
+                this.setError('Connection error');
+                this.reconnect();
+            }
         }
 
         this.socket.onmessage = (evt) => {
             let msg = JSON.parse(evt.data);
             
             if (msg.error) {
-                this.reconnect();
+                this.setError(["Server error: ", msg.error.code, ", ", msg.error.message].join(''))
+                this.reconnect()
                 return
             }
 

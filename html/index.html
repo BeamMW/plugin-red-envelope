@@ -8,7 +8,10 @@
         <link href="./css/font.css" rel="stylesheet">
     </head>
     <body>
-        <div id="error"></div><br>
+        <div class="error-container hidden" id="error-full-container">
+            <div id="error-full"></div>
+        </div>
+        <div id="error-common"></div>
         <div class="container hidden" id="envelope">
             <div class="container__cards">
                 <div class="container__cards__left">
@@ -63,10 +66,6 @@
                         </span>
                     </button>
                 </div>
-
-                <div class="container__main__not-enough-alert hidden" id="first-not-enough-alert">
-                    Сurrent BEAM balance is not enough for deposit.
-                </div>
             </div>
 
             <!-- second deposit template -->
@@ -96,9 +95,6 @@
                             <span class="ui-button__text">catch BEAM</span>
                         </span>
                     </button>
-                </div>
-                <div class="container__main__not-enough-alert hidden" id="welcome-not-enough-alert">
-                    Сurrent BEAM balance is not enough for deposit.
                 </div>
             </div>
 
@@ -136,9 +132,6 @@
                         </span>
                     </button>
                 </div>
-                <div class="container__main__not-enough-alert hidden" id="dep-not-enough-alert">
-                    Сurrent BEAM balance is not enough for deposit.
-                </div>
             </div>
 
             <!-- withdraw template -->
@@ -158,9 +151,6 @@
                             <span class="ui-button__text">deposit</span>
                         </span>
                     </button>
-                </div>
-                <div class="container__main__not-enough-alert hidden" id="with-not-enough-alert">
-                    Сurrent BEAM balance is not enough for deposit.
                 </div>
             </div>
 
@@ -190,9 +180,6 @@
                             <span class="ui-button__text">withdraw all</span>
                         </span>
                     </button>
-                </div>
-                <div class="container__main__not-enough-alert hidden" id="catched-not-enough-alert">
-                    Сurrent BEAM balance is not enough for deposit.
                 </div>
             </div>
 

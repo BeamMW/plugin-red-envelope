@@ -6,6 +6,8 @@ const TIMEOUT_VALUE = 1000;
 const WS_PATH = "ws://3.136.182.25/ws";
 const ADDR_COMMENT = "BEAM Envelope Withdraw";
 const DEPOSIT_COMMENT = "BEAM Red Envelope Deposit";
+const REJECTED_CALL_ID = -32021;
+const IN_PROGRESS_ID = 5;
 
 class RedEnvelope {
     constructor() {
@@ -25,7 +27,6 @@ class RedEnvelope {
             is_withdraw_active: true,
             is_catch_active: true,
             is_deposit_active: true,
-            wallet_status_available: 0,
             is_deposit_in_progress: false,
             is_deposit_finished: null
         };
@@ -55,6 +56,8 @@ class RedEnvelope {
         Utils.hide('withdraw-main');
         Utils.hide('second-deposit-main');
         Utils.hide('deposit-in-progress-main');
+        Utils.hide('error-full-container');
+        Utils.hide('error-common');
     }
 
     updateEnvelopeView = () => {
@@ -74,18 +77,15 @@ class RedEnvelope {
             if (this.envelopeData.available_reward > 0) {
                 this.envelopeData.is_withdraw_active = true;
                 Utils.show('envelope-catched-main');
-                this.notEnoughAlertUpdate('catched-not-enough-alert', 'catched-deposit-button');
                 Utils.setText('catched-value', `${this.envelopeData.available_reward} BEAM`);
             } else {
                 Utils.removeClassById('withdraw-button-popup', 'disabled');
                 if (this.envelopeData.outgoing_reward > 0) {
-                    this.notEnoughAlertUpdate('with-not-enough-alert', 'with-deposit-button');
                     Utils.hide('withdraw-popup');
                     Utils.show('withdraw-main');
                 } else {
                     if (this.envelopeData.remaining === 0) {
                         Utils.show('first-deposit-main');
-                        this.notEnoughAlertUpdate('first-not-enough-alert', 'first-deposit-button');
                     } else {
                         if (!this.envelopeData.taken_amount || this.envelopeData.taken_amount === 0) {
                             Utils.hide('catch-more-after');
@@ -99,22 +99,9 @@ class RedEnvelope {
                             Utils.addClassById('dep-catch-button', 'disabled');
                         }
                         Utils.show('second-deposit-main');
-                        this.notEnoughAlertUpdate('welcome-not-enough-alert', 'welcome-deposit-button');
                     }
                 }
             }
-        }
-    }
-
-    notEnoughAlertUpdate = (id, buttonId) => {
-        if (this.envelopeData.wallet_status_available > 0) {
-            Utils.hide(id);
-            this.envelopeData.is_deposit_active = true;
-            Utils.removeClassById(buttonId, 'disabled');
-        } else {
-            Utils.show(id);
-            this.envelopeData.is_deposit_active = false;
-            Utils.addClassById(buttonId, 'disabled');
         }
     }
 
@@ -124,7 +111,17 @@ class RedEnvelope {
             text += " Restarting..."
         }
 
-        Utils.setText('error', text)
+        let errorElementId = "error-common";
+        if (document.getElementById('envelope').classList.contains('hidden')) {
+            errorElementId = "error-full";
+            Utils.show('error-full-container');
+            Utils.hide('error-common')
+        } else {
+            Utils.show('error-common');
+            Utils.hide('error-full-container');
+        }
+
+        Utils.setText(errorElementId, text)
         if (this.errTimeout) {
             clearTimeout(this.errTimeout)
         }
@@ -220,7 +217,6 @@ class RedEnvelope {
             }
 
             if (msg.method == "game-status") {
-                this.getWalletStatus();
                 this.getTxStatus();
                 this.initEnvelopeData(msg.params);
 
@@ -231,17 +227,11 @@ class RedEnvelope {
                     ${currentDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })})`);
 
                 this.setError("")
-                Utils.show('envelope')
+                Utils.show('envelope');
+                Utils.hide('error-full-container');
+                Utils.hide('error-common');
             }
         }
-    }
-
-    getWalletStatus = () => {
-        Utils.callApi({
-            "jsonrpc":"2.0", 
-            "id": "wallet_status",
-            "method":"wallet_status"
-        })
     }
 
     getTxStatus = () => {
@@ -285,9 +275,6 @@ Utils.onLoad(async (beamAPI) => {
         ev.preventDefault();
         const bigValue = new Big(Utils.getById('deposit-input').value);
         const value = bigValue.times(GROTHS_IN_BEAM);
-        redEnvelope.envelopeData.is_deposit_in_progress = true;
-        redEnvelope.envelopeData.is_deposit_finished = false;
-        redEnvelope.envelopeData.deposit += parseInt(value);
         Utils.callApi({
             "jsonrpc": "2.0",
             "id":      "tx_send",
@@ -351,7 +338,6 @@ Utils.onLoad(async (beamAPI) => {
     Utils.getById('withdraw-button-popup').addEventListener('click', (ev) => {
         if (redEnvelope.envelopeData.is_withdraw_active) {
             ev.preventDefault();
-            redEnvelope.envelopeData.is_withdraw_active = false;
             Utils.addClassById('withdraw-button-popup', 'disabled');
             redEnvelope.socket.send(JSON.stringify({
                 jsonrpc: "2.0",
@@ -397,69 +383,78 @@ Utils.onLoad(async (beamAPI) => {
 
         try {
             res = JSON.parse(json);
-            err = JSON.stringify(res.error);
-        } catch (e) {
-            err = e.toString();
-        } 
+            
+            if (res.error) {
+                if (res.error.code == REJECTED_CALL_ID) {
+                    return;
+                }
+                throw JSON.stringify(res.error);
+            }
 
-        if (err) {
+            if (!res.result) {
+                throw "Failed to call wallet API";
+            }
+
+            if (res.id === "addr_list") {
+                for (let idx = 0; idx < res.result.length; ++idx) {
+                    let addr = res.result[idx];
+                    if (addr.comment == ADDR_COMMENT) {
+                        redEnvelope.envelopeData.wallet_address = addr.address;
+                        break;
+                    }
+                }
+    
+                if (!redEnvelope.envelopeData.wallet_address) {
+                    Utils.callApi({
+                        "jsonrpc": "2.0",
+                        "id":      "create_address",
+                        "method":  "create_address",
+                        "params":  {
+                            "expiration": "never",
+                            "comment": ADDR_COMMENT
+                        }
+                    })
+                } else {
+                    redEnvelope.connect();
+                }
+            }
+    
+            if (res.id === "create_address") {
+                redEnvelope.envelopeData.wallet_address = res.result;
+                redEnvelope.restart();
+            }
+    
+            if (res.id === "tx_list") {
+                const transacions = res.result;
+    
+                const depositTrasaction = transacions.find((item) => {
+                    return item.comment === DEPOSIT_COMMENT && item.status === IN_PROGRESS_ID;
+                })
+    
+                if (depositTrasaction !== undefined) {
+                    redEnvelope.envelopeData.is_deposit_in_progress = true;
+                    redEnvelope.envelopeData.is_deposit_finished = false;
+                } else {
+                    if (redEnvelope.envelopeData.is_deposit_in_progress) {
+                        redEnvelope.envelopeData.is_deposit_in_progress = false;
+                        redEnvelope.envelopeData.is_deposit_finished = true;
+                    }
+                }
+            }
+
+            if (res.id == "tx_send") {
+                if (res.result.txId !== undefined) {
+                    redEnvelope.envelopeData.is_deposit_in_progress = true;
+                    redEnvelope.envelopeData.is_deposit_finished = false;
+                }
+            }
+        } catch (e) {
+            redEnvelope.setError(e.toString());
             redEnvelope.restart();
             return
-        }
-
-        if (res.id === "addr_list") {
-            for (let idx = 0; idx < res.result.length; ++idx) {
-                let addr = res.result[idx];
-                if (addr.comment == ADDR_COMMENT) {
-                    redEnvelope.envelopeData.wallet_address = addr.address;
-                    break;
-                }
-            }
-
-            if (!redEnvelope.envelopeData.wallet_address) {
-                Utils.callApi({
-                    "jsonrpc": "2.0",
-                    "id":      "create_address",
-                    "method":  "create_address",
-                    "params":  {
-                        "expiration": "never",
-                        "comment": ADDR_COMMENT
-                    }
-                })
-            } else {
-                redEnvelope.connect();
-            }
-        }
-
-        if (res.id === "create_address") {
-            redEnvelope.envelopeData.wallet_address = res.result;
-            redEnvelope.restart();
-        }
-
-        if (res.id === "wallet_status") {
-            redEnvelope.envelopeData.wallet_status_available = res.result.available;
-        }
-
-        if (res.id === "tx_list") {
-            const transacions = res.result;
-
-            const depositTrasaction = transacions.find((item) => {
-                return item.comment === DEPOSIT_COMMENT && (item.status === 0 || item.status === 1 || item.status === 5);
-            })
-
-            if (depositTrasaction !== undefined) {
-                redEnvelope.envelopeData.is_deposit_in_progress = true;
-                redEnvelope.envelopeData.is_deposit_finished = false;
-            } else {
-                if (redEnvelope.envelopeData.is_deposit_in_progress) {
-                    redEnvelope.envelopeData.is_deposit_in_progress = false;
-                    redEnvelope.envelopeData.is_deposit_finished = true;
-                }
-            }
-        }
+        } 
     });
 
     redEnvelope.getTxStatus();
-    redEnvelope.getWalletStatus();
     redEnvelope.start();
 })

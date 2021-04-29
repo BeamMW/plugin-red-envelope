@@ -38,13 +38,11 @@ export default class Utils {
     }
 
     static show(id) {
-        let obj = this.getById(id)
-        obj.style.display="flex";
+        this.getById(id).classList.remove("hidden");
     }
     
     static hide(id) {
-        let obj = this.getById(id)
-        obj.style.display="none";
+        this.getById(id).classList.add("hidden");
     }
 
     static hex2rgba = (hex, alpha = 1) => {

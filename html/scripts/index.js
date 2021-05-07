@@ -3,7 +3,7 @@ import Utils from "./utils.js";
 const GROTHS_IN_BEAM = 100000000;
 const STAKE_FEE = 100000;
 const TIMEOUT_VALUE = 1000;
-const WS_PATH = "ws://envelope-testnet.beam.mw/ws";
+const WS_PATH = "wss://envelope-testnet.beam.mw/ws";
 const ADDR_COMMENT = "BEAM Envelope Withdraw";
 const DEPOSIT_COMMENT = "BEAM Red Envelope Deposit";
 const REJECTED_CALL_ID = -32021;

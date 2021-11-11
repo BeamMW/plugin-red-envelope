@@ -65,13 +65,20 @@ func main() {
 	http.HandleFunc("/", helloRequest)
 
 	// File server
-	if len(config.StaticFiles) != 0 && len(config.StaticEndpoint) != 0 {
-		log.Printf("Serving static files from %s at %s", config.StaticFiles, config.StaticEndpoint)
-		fs := http.FileServer(http.Dir(config.StaticFiles))
-		strip := http.StripPrefix(config.StaticEndpoint, fs)
+	for _, epoint := range config.StaticEndpoints {
+		log.Printf("Serving static files from %s at %s, same origin is %v", epoint.Folder, epoint.Endpoint, epoint.SameOrigin)
+		fs := http.FileServer(http.Dir(epoint.Folder))
+		strip := http.StripPrefix(epoint.Endpoint, fs)
+		same := epoint.SameOrigin
 
-		http.HandleFunc(config.StaticEndpoint, func (w http.ResponseWriter, r *http.Request) {
+		http.HandleFunc(epoint.Endpoint, func (w http.ResponseWriter, r *http.Request) {
 			w.Header().Add("Cache-Control", "must-revalidate")
+
+			if same {
+				w.Header().Add("Cross-Origin-Opener-Policy", "same-origin")
+				w.Header().Add("Cross-Origin-Embedder-Policy", "require-corp")
+			}
+
 			strip.ServeHTTP(w, r)
 		})
 	}
